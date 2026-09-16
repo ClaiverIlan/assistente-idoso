@@ -9,12 +9,20 @@ import {
   criarIdoso,
   editarIdoso as atualizarIdosoApi,
   excluirIdoso as excluirIdosoApi,
+  criarMedicamento,
+  editarMedicamento as atualizarMedicamentoApi,
+  excluirMedicamento as excluirMedicamentoApi,
+  criarOcorrencia,
+  editarOcorrencia as atualizarOcorrenciaApi,
+  excluirOcorrencia as excluirOcorrenciaApi,
 } from "./services/api";
 
 import Sidebar from "./components/Sidebar";
 import IdosoCard from "./components/IdosoCard";
 import IdosoForm from "./components/IdosoForm";
 import RotinaIdoso from "./components/RotinaIdoso";
+import MedicamentoForm from "./components/MedicamentoForm";
+import OcorrenciaForm from "./components/OcorrenciaForm";
 
 function App() {
   const [idosoSelecionado, setIdosoSelecionado] = useState(null);
@@ -25,7 +33,10 @@ function App() {
   const [ocorrencias, setOcorrencias] = useState([]);
   const [lembretes, setLembretes] = useState([]);
 
-  // Formulário de cadastro de idoso
+  // ==============================
+  // FORMULÁRIO DE IDOSO
+  // ==============================
+
   const [mostrarFormularioIdoso, setMostrarFormularioIdoso] =
     useState(false);
 
@@ -35,7 +46,6 @@ function App() {
     Observacoes: "",
   });
 
-  // Formulário de edição de idoso
   const [mostrarFormularioEdicao, setMostrarFormularioEdicao] =
     useState(false);
 
@@ -46,7 +56,66 @@ function App() {
     Observacoes: "",
   });
 
-  // Buscar cuidadores
+  // ==============================
+  // FORMULÁRIO DE MEDICAMENTO
+  // ==============================
+
+  const [mostrarFormularioMedicamento, setMostrarFormularioMedicamento] =
+    useState(false);
+
+  const [novoMedicamento, setNovoMedicamento] = useState({
+    Nome: "",
+    Dosagem: "",
+    Horario: "",
+    Frequencia: "",
+    Observacoes: "",
+  });
+
+  const [
+    mostrarFormularioEdicaoMedicamento,
+    setMostrarFormularioEdicaoMedicamento,
+  ] = useState(false);
+
+  const [medicamentoEditando, setMedicamentoEditando] = useState({
+    Id: null,
+    Idoso_Id: null,
+    Nome: "",
+    Dosagem: "",
+    Horario: "",
+    Frequencia: "",
+    Observacoes: "",
+  });
+
+  // ==============================
+  // FORMULÁRIO DE OCORRÊNCIA
+  // ==============================
+
+  const [mostrarFormularioOcorrencia, setMostrarFormularioOcorrencia] =
+    useState(false);
+
+  const [novaOcorrencia, setNovaOcorrencia] = useState({
+    Tipo: "",
+    "Descrição": "",
+    Data_Hora: "",
+  });
+
+  const [
+    mostrarFormularioEdicaoOcorrencia,
+    setMostrarFormularioEdicaoOcorrencia,
+  ] = useState(false);
+
+  const [ocorrenciaEditando, setOcorrenciaEditando] = useState({
+    Id: null,
+    Idoso_Id: null,
+    Tipo: "",
+    "Descrição": "",
+    Data_Hora: "",
+  });
+
+  // ==============================
+  // BUSCAR DADOS
+  // ==============================
+
   useEffect(() => {
     listarCuidadores()
       .then((dados) => {
@@ -57,7 +126,6 @@ function App() {
       });
   }, []);
 
-  // Buscar idosos
   useEffect(() => {
     listarIdosos()
       .then((dados) => {
@@ -68,7 +136,6 @@ function App() {
       });
   }, []);
 
-  // Buscar medicamentos
   useEffect(() => {
     listarMedicamentos()
       .then((dados) => {
@@ -79,7 +146,6 @@ function App() {
       });
   }, []);
 
-  // Buscar ocorrências
   useEffect(() => {
     listarOcorrencias()
       .then((dados) => {
@@ -90,7 +156,6 @@ function App() {
       });
   }, []);
 
-  // Buscar lembretes
   useEffect(() => {
     listarLembretes()
       .then((dados) => {
@@ -101,7 +166,10 @@ function App() {
       });
   }, []);
 
-  // Cadastrar idoso
+  // ==============================
+  // IDOSOS
+  // ==============================
+
   const cadastrarIdoso = async (evento) => {
     evento.preventDefault();
 
@@ -133,7 +201,6 @@ function App() {
     }
   };
 
-  // Excluir idoso
   const excluirIdoso = async (idoso) => {
     const confirmar = window.confirm(
       `Deseja realmente excluir ${idoso.Nome}?`
@@ -166,7 +233,6 @@ function App() {
     }
   };
 
-  // Atualizar idoso
   const editarIdoso = async (evento) => {
     evento.preventDefault();
 
@@ -200,7 +266,6 @@ function App() {
     }
   };
 
-  // Preparar edição de um idoso
   const prepararEdicaoIdoso = (idoso) => {
     setIdosoEditando({
       Id: idoso.Id,
@@ -213,16 +278,258 @@ function App() {
     setMostrarFormularioIdoso(false);
   };
 
+  // ==============================
+  // MEDICAMENTOS
+  // ==============================
+
+  const cadastrarMedicamento = async (evento) => {
+    evento.preventDefault();
+
+    if (!idosoSelecionado) {
+      alert("Selecione um idoso antes de cadastrar o medicamento.");
+      return;
+    }
+
+    try {
+      const dados = await criarMedicamento({
+        Idoso_Id: idosoSelecionado.Id,
+        Nome: novoMedicamento.Nome,
+        Dosagem: novoMedicamento.Dosagem,
+        Horario: novoMedicamento.Horario,
+        Frequencia: novoMedicamento.Frequencia,
+        Observacoes: novoMedicamento.Observacoes,
+      });
+
+      setMedicamentos((medicamentosAtuais) => [
+        ...medicamentosAtuais,
+        dados,
+      ]);
+
+      if (dados.lembrete) {
+        setLembretes((lembretesAtuais) => [
+          ...lembretesAtuais,
+          dados.lembrete,
+        ]);
+      }
+
+      setNovoMedicamento({
+        Nome: "",
+        Dosagem: "",
+        Horario: "",
+        Frequencia: "",
+        Observacoes: "",
+      });
+
+      setMostrarFormularioMedicamento(false);
+    } catch (erro) {
+      console.error("Erro ao cadastrar medicamento:", erro);
+      alert(erro.message);
+    }
+  };
+
+  const editarMedicamento = async (evento) => {
+    evento.preventDefault();
+
+    try {
+      const dados = await atualizarMedicamentoApi(
+        medicamentoEditando.Id,
+        {
+          Idoso_Id: medicamentoEditando.Idoso_Id,
+          Nome: medicamentoEditando.Nome,
+          Dosagem: medicamentoEditando.Dosagem,
+          Horario: medicamentoEditando.Horario,
+          Frequencia: medicamentoEditando.Frequencia,
+          Observacoes: medicamentoEditando.Observacoes,
+        }
+      );
+
+      setMedicamentos((medicamentosAtuais) =>
+        medicamentosAtuais.map((medicamento) =>
+          medicamento.Id === dados.Id ? dados : medicamento
+        )
+      );
+
+      if (dados.lembrete) {
+        setLembretes((lembretesAtuais) =>
+          lembretesAtuais.map((lembrete) =>
+            lembrete.Id === dados.lembrete.Id
+              ? dados.lembrete
+              : lembrete
+          )
+        );
+      }
+
+      setMostrarFormularioEdicaoMedicamento(false);
+    } catch (erro) {
+      console.error("Erro ao atualizar medicamento:", erro);
+      alert(erro.message);
+    }
+  };
+
+  const excluirMedicamento = async (medicamento) => {
+    const confirmar = window.confirm(
+      `Deseja realmente excluir ${medicamento.Nome}?`
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    try {
+      await excluirMedicamentoApi(medicamento.Id);
+
+      setMedicamentos((medicamentosAtuais) =>
+        medicamentosAtuais.filter(
+          (item) => item.Id !== medicamento.Id
+        )
+      );
+
+      setLembretes((lembretesAtuais) =>
+        lembretesAtuais.filter(
+          (lembrete) =>
+            lembrete.Medicamento_Id !== medicamento.Id
+        )
+      );
+
+      setMostrarFormularioEdicaoMedicamento(false);
+    } catch (erro) {
+      console.error("Erro ao excluir medicamento:", erro);
+      alert(erro.message);
+    }
+  };
+
+  const prepararEdicaoMedicamento = (medicamento) => {
+    setMedicamentoEditando({
+      Id: medicamento.Id,
+      Idoso_Id: medicamento.Idoso_Id,
+      Nome: medicamento.Nome,
+      Dosagem: medicamento.Dosagem,
+      Horario: medicamento.Horario,
+      Frequencia: medicamento.Frequencia,
+      Observacoes: medicamento.Observacoes || "",
+    });
+
+    setMostrarFormularioEdicaoMedicamento(true);
+    setMostrarFormularioMedicamento(false);
+  };
+
+  // ==============================
+  // OCORRÊNCIAS
+  // ==============================
+
+  const cadastrarOcorrencia = async (evento) => {
+    evento.preventDefault();
+
+    if (!idosoSelecionado) {
+      alert("Selecione um idoso antes de registrar a ocorrência.");
+      return;
+    }
+
+    try {
+      const dados = await criarOcorrencia({
+        Idoso_Id: idosoSelecionado.Id,
+        Tipo: novaOcorrencia.Tipo,
+        "Descrição": novaOcorrencia["Descrição"],
+        Data_Hora: novaOcorrencia.Data_Hora,
+      });
+
+      setOcorrencias((ocorrenciasAtuais) => [
+        ...ocorrenciasAtuais,
+        dados,
+      ]);
+
+      setNovaOcorrencia({
+        Tipo: "",
+        "Descrição": "",
+        Data_Hora: "",
+      });
+
+      setMostrarFormularioOcorrencia(false);
+    } catch (erro) {
+      console.error("Erro ao cadastrar ocorrência:", erro);
+      alert(erro.message);
+    }
+  };
+
+  const editarOcorrencia = async (evento) => {
+    evento.preventDefault();
+
+    try {
+      const dados = await atualizarOcorrenciaApi(
+        ocorrenciaEditando.Id,
+        {
+          Idoso_Id: ocorrenciaEditando.Idoso_Id,
+          Tipo: ocorrenciaEditando.Tipo,
+          "Descrição": ocorrenciaEditando["Descrição"],
+          Data_Hora: ocorrenciaEditando.Data_Hora,
+        }
+      );
+
+      setOcorrencias((ocorrenciasAtuais) =>
+        ocorrenciasAtuais.map((ocorrencia) =>
+          ocorrencia.Id === dados.Id ? dados : ocorrencia
+        )
+      );
+
+      setMostrarFormularioEdicaoOcorrencia(false);
+    } catch (erro) {
+      console.error("Erro ao atualizar ocorrência:", erro);
+      alert(erro.message);
+    }
+  };
+
+  const excluirOcorrencia = async (ocorrencia) => {
+    const confirmar = window.confirm(
+      `Deseja realmente excluir a ocorrência "${ocorrencia.Tipo}"?`
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    try {
+      await excluirOcorrenciaApi(ocorrencia.Id);
+
+      setOcorrencias((ocorrenciasAtuais) =>
+        ocorrenciasAtuais.filter(
+          (item) => item.Id !== ocorrencia.Id
+        )
+      );
+
+      if (ocorrenciaEditando.Id === ocorrencia.Id) {
+        setMostrarFormularioEdicaoOcorrencia(false);
+      }
+    } catch (erro) {
+      console.error("Erro ao excluir ocorrência:", erro);
+      alert(erro.message);
+    }
+  };
+
+  const prepararEdicaoOcorrencia = (ocorrencia) => {
+    setOcorrenciaEditando({
+      Id: ocorrencia.Id,
+      Idoso_Id: ocorrencia.Idoso_Id,
+      Tipo: ocorrencia.Tipo,
+      "Descrição": ocorrencia["Descrição"],
+      Data_Hora: ocorrencia.Data_Hora,
+    });
+
+    setMostrarFormularioEdicaoOcorrencia(true);
+    setMostrarFormularioOcorrencia(false);
+  };
+
+  // ==============================
+  // CUIDADOR ATUAL
+  // ==============================
+
   const cuidador = cuidadores[0];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="flex min-h-screen">
 
-        {/* Sidebar */}
         <Sidebar />
 
-        {/* Conteúdo principal */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
 
           {/* Cabeçalho */}
@@ -232,7 +539,9 @@ function App() {
             </p>
 
             <h2 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
-              {cuidador ? `Olá, ${cuidador.Nome}` : "Bem-vindo"}
+              {cuidador
+                ? `Olá, ${cuidador.Nome}`
+                : "Bem-vindo"}
             </h2>
 
             <p className="mt-2 text-slate-500">
@@ -265,7 +574,7 @@ function App() {
               </button>
             </div>
 
-            {/* Formulário de cadastro */}
+            {/* Formulário de cadastro de idoso */}
             {mostrarFormularioIdoso && (
               <IdosoForm
                 modo="adicionar"
@@ -284,7 +593,7 @@ function App() {
               />
             )}
 
-            {/* Formulário de edição */}
+            {/* Formulário de edição de idoso */}
             {mostrarFormularioEdicao && (
               <IdosoForm
                 modo="editar"
@@ -303,7 +612,9 @@ function App() {
                 <IdosoCard
                   key={idoso.Id}
                   idoso={idoso}
-                  selecionado={idosoSelecionado?.Id === idoso.Id}
+                  selecionado={
+                    idosoSelecionado?.Id === idoso.Id
+                  }
                   onSelecionar={setIdosoSelecionado}
                   onEditar={prepararEdicaoIdoso}
                   onExcluir={excluirIdoso}
@@ -312,13 +623,74 @@ function App() {
             </div>
           </section>
 
-          {/* Rotina */}
+          {/* Rotina do idoso */}
           {idosoSelecionado ? (
             <RotinaIdoso
               idoso={idosoSelecionado}
               medicamentos={medicamentos}
               lembretes={lembretes}
               ocorrencias={ocorrencias}
+
+              mostrarFormularioMedicamento={
+                mostrarFormularioMedicamento
+              }
+
+              mostrarFormularioEdicaoMedicamento={
+                mostrarFormularioEdicaoMedicamento
+              }
+
+              novoMedicamento={novoMedicamento}
+              medicamentoEditando={medicamentoEditando}
+
+              setMostrarFormularioMedicamento={
+                setMostrarFormularioMedicamento
+              }
+
+              setMostrarFormularioEdicaoMedicamento={
+                setMostrarFormularioEdicaoMedicamento
+              }
+
+              setNovoMedicamento={setNovoMedicamento}
+              setMedicamentoEditando={setMedicamentoEditando}
+
+              onCadastrarMedicamento={cadastrarMedicamento}
+              onEditarMedicamento={editarMedicamento}
+              onExcluirMedicamento={excluirMedicamento}
+
+              onPrepararEdicaoMedicamento={
+                prepararEdicaoMedicamento
+              }
+
+              /* Ocorrências */
+              mostrarFormularioOcorrencia={
+                mostrarFormularioOcorrencia
+              }
+
+              mostrarFormularioEdicaoOcorrencia={
+                mostrarFormularioEdicaoOcorrencia
+              }
+
+              novaOcorrencia={novaOcorrencia}
+              ocorrenciaEditando={ocorrenciaEditando}
+
+              setMostrarFormularioOcorrencia={
+                setMostrarFormularioOcorrencia
+              }
+
+              setMostrarFormularioEdicaoOcorrencia={
+                setMostrarFormularioEdicaoOcorrencia
+              }
+
+              setNovaOcorrencia={setNovaOcorrencia}
+              setOcorrenciaEditando={setOcorrenciaEditando}
+
+              onCadastrarOcorrencia={cadastrarOcorrencia}
+              onEditarOcorrencia={editarOcorrencia}
+              onExcluirOcorrencia={excluirOcorrencia}
+
+              onPrepararEdicaoOcorrencia={
+                prepararEdicaoOcorrencia
+              }
             />
           ) : (
             <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">

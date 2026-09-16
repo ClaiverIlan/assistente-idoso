@@ -328,7 +328,7 @@ app.get("/api/medicamentos", (req, res) => {
     }
 });
 
-// Cadastra um novo medicamento
+// Cadastra um novo medicamento e gera um lembrete automaticamente
 app.post("/api/medicamentos", (req, res) => {
   try {
     const {
@@ -346,6 +346,7 @@ app.post("/api/medicamentos", (req, res) => {
       });
     }
 
+    // 1. Cadastra o medicamento
     const resultado = db.prepare(`
       INSERT INTO "MEDICAMENTO"
       ("Idoso_Id", "Nome", "Dosagem", "Horario", "Frequencia", "Observacoes")
@@ -359,16 +360,44 @@ app.post("/api/medicamentos", (req, res) => {
       Observacoes
     );
 
+    // ID do medicamento recém-criado
+    const medicamentoId = Number(resultado.lastInsertRowid);
+
+    // 2. Cria automaticamente o lembrete
+    let lembrete = null;
+
+    if (Horario) {
+      const resultadoLembrete = db.prepare(`
+        INSERT INTO "LEMBRETE"
+        ("Medicamento_Id", "Data_Hora", "Status")
+        VALUES (?, ?, ?)
+      `).run(
+        medicamentoId,
+        Horario,
+        "Pendente"
+      );
+
+      lembrete = {
+        Id: Number(resultadoLembrete.lastInsertRowid),
+        Medicamento_Id: medicamentoId,
+        Data_Hora: Horario,
+        Status: "Pendente"
+      };
+    }
+
+    // 3. Retorna medicamento + lembrete criado
     res.status(201).json({
       mensagem: "Medicamento cadastrado com sucesso.",
-      Id: Number(resultado.lastInsertRowid),
+      Id: medicamentoId,
       Idoso_Id,
       Nome,
       Dosagem,
       Horario,
       Frequencia,
-      Observacoes
+      Observacoes,
+      lembrete
     });
+
   } catch (erro) {
     console.error("Erro ao cadastrar medicamento:", erro);
 
@@ -378,7 +407,7 @@ app.post("/api/medicamentos", (req, res) => {
   }
 });
 
-// Atualiza um medicamento existente
+// Atualiza um medicamento existente e o lembrete associado
 app.put("/api/medicamentos/:id", (req, res) => {
   try {
     const { id } = req.params;
@@ -398,6 +427,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
       });
     }
 
+    // 1. Atualiza o medicamento
     const resultado = db.prepare(`
       UPDATE "MEDICAMENTO"
       SET
@@ -424,6 +454,37 @@ app.put("/api/medicamentos/:id", (req, res) => {
       });
     }
 
+    // 2. Procura o lembrete associado ao medicamento
+    const lembreteExistente = db.prepare(`
+      SELECT *
+      FROM "LEMBRETE"
+      WHERE "Medicamento_Id" = ?
+      LIMIT 1
+    `).get(id);
+
+    let lembrete = null;
+
+    // 3. Se existe lembrete e o medicamento possui horário,
+    // atualiza o horário do lembrete
+    if (lembreteExistente && Horario) {
+      db.prepare(`
+        UPDATE "LEMBRETE"
+        SET
+          "Data_Hora" = ?
+        WHERE "Medicamento_Id" = ?
+      `).run(
+        Horario,
+        id
+      );
+
+      lembrete = {
+        Id: Number(lembreteExistente.Id),
+        Medicamento_Id: Number(id),
+        Data_Hora: Horario,
+        Status: lembreteExistente.Status
+      };
+    }
+
     res.json({
       mensagem: "Medicamento atualizado com sucesso.",
       Id: Number(id),
@@ -432,8 +493,10 @@ app.put("/api/medicamentos/:id", (req, res) => {
       Dosagem,
       Horario,
       Frequencia,
-      Observacoes
+      Observacoes,
+      lembrete
     });
+
   } catch (erro) {
     console.error("Erro ao atualizar medicamento:", erro);
 
@@ -444,11 +507,18 @@ app.put("/api/medicamentos/:id", (req, res) => {
 });
 
 
-// Exclui um medicamento existente
+// Exclui um medicamento e o lembrete associado
 app.delete("/api/medicamentos/:id", (req, res) => {
   try {
     const { id } = req.params;
 
+    // 1. Exclui os lembretes relacionados ao medicamento
+    db.prepare(`
+      DELETE FROM "LEMBRETE"
+      WHERE "Medicamento_Id" = ?
+    `).run(id);
+
+    // 2. Exclui o medicamento
     const resultado = db.prepare(`
       DELETE FROM "MEDICAMENTO"
       WHERE "Id" = ?
@@ -461,9 +531,10 @@ app.delete("/api/medicamentos/:id", (req, res) => {
     }
 
     res.json({
-      mensagem: "Medicamento excluído com sucesso.",
+      mensagem: "Medicamento e lembretes associados excluídos com sucesso.",
       Id: Number(id)
     });
+
   } catch (erro) {
     console.error("Erro ao excluir medicamento:", erro);
 
