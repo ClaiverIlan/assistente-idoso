@@ -1,9 +1,13 @@
 const express = require("express");
+
 const cors = require("cors");
+
 const { DatabaseSync } = require("node:sqlite");
+
 const path = require("path");
 
 const swaggerUi = require("swagger-ui-express");
+
 const swaggerSpec = require("./swagger");
 
 const app = express();
@@ -13,58 +17,67 @@ const PORT = 3000;
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Permite receber requisições do frontend
+
 app.use(cors());
 
 // Permite trabalhar com JSON
+
 app.use(express.json());
 
 // Localização do banco SQLite
+
 const dbPath = path.join(__dirname, "../../assistente-idoso.db");
 
 // Abre o banco existente
+
 const db = new DatabaseSync(dbPath);
 
 console.log("Banco SQLite conectado com sucesso!");
 
 // Rota inicial
+
 app.get("/", (req, res) => {
-    res.send("Backend do Assistente de Cuidado funcionando!");
+  res.send("Backend do Assistente de Cuidado funcionando!");
 });
 
 // Teste da conexão com o banco
+
 app.get("/api/teste-banco", (req, res) => {
-    try {
-        const resultado = db.prepare("SELECT * FROM CUIDADOR").all();
+  try {
+    const resultado = db.prepare("SELECT * FROM CUIDADOR").all();
 
-        res.json(resultado);
-    } catch (erro) {
-        console.error("Erro ao consultar o banco:", erro);
+    res.json(resultado);
+  } catch (erro) {
+    console.error("Erro ao consultar o banco:", erro);
 
-        res.status(500).json({
-            erro: "Erro ao consultar o banco de dados."
-        });
-    }
+    res.status(500).json({
+      erro: "Erro ao consultar o banco de dados."
+    });
+  }
 });
 
 // Lista todos os cuidadores
+
 app.get("/api/cuidadores", (req, res) => {
-    try {
-        const cuidadores = db.prepare("SELECT * FROM CUIDADOR").all();
+  try {
+    const cuidadores = db.prepare("SELECT * FROM CUIDADOR").all();
 
-        res.json(cuidadores);
-    } catch (erro) {
-        console.error("Erro ao consultar cuidadores:", erro);
+    res.json(cuidadores);
+  } catch (erro) {
+    console.error("Erro ao consultar cuidadores:", erro);
 
-        res.status(500).json({
-            erro: "Erro ao consultar os cuidadores."
-        });
-    }
+    res.status(500).json({
+      erro: "Erro ao consultar os cuidadores."
+    });
+  }
 });
 
 // Atualiza um cuidador existente
+
 app.put("/api/cuidadores/:id", (req, res) => {
   try {
     const { id } = req.params;
+
     const { Nome, Email, Tipo } = req.body;
 
     if (!Nome || !Email || !Tipo) {
@@ -106,8 +119,8 @@ app.put("/api/cuidadores/:id", (req, res) => {
   }
 });
 
-
 // Exclui um cuidador existente
+
 app.delete("/api/cuidadores/:id", (req, res) => {
   try {
     const { id } = req.params;
@@ -137,53 +150,78 @@ app.delete("/api/cuidadores/:id", (req, res) => {
 });
 
 // Cadastra um novo cuidador
+
 app.post("/api/cuidadores", (req, res) => {
-    try {
-        const { Nome, Email, Tipo } = req.body;
+  try {
+    const { Nome, Email, Tipo } = req.body;
 
-        if (!Nome || !Email || !Tipo) {
-            return res.status(400).json({
-                erro: "Nome, Email e Tipo são obrigatórios."
-            });
-        }
-
-        const resultado = db.prepare(`
-            INSERT INTO CUIDADOR (Nome, Email, Tipo)
-            VALUES (?, ?, ?)
-        `).run(Nome, Email, Tipo);
-
-        res.status(201).json({
-            mensagem: "Cuidador cadastrado com sucesso.",
-            Id: Number(resultado.lastInsertRowid),
-            Nome,
-            Email,
-            Tipo
-        });
-    } catch (erro) {
-        console.error("Erro ao cadastrar cuidador:", erro);
-
-        res.status(500).json({
-            erro: "Erro ao cadastrar o cuidador."
-        });
+    if (!Nome || !Email || !Tipo) {
+      return res.status(400).json({
+        erro: "Nome, Email e Tipo são obrigatórios."
+      });
     }
+
+    const emailNormalizado = Email.trim();
+
+    // Verifica se já existe um cuidador com esse e-mail
+    // ignorando diferenças entre maiúsculas/minúsculas e espaços.
+    const cuidadorExistente = db.prepare(`
+      SELECT "Id"
+      FROM "CUIDADOR"
+      WHERE LOWER(TRIM("Email")) = LOWER(TRIM(?))
+      LIMIT 1
+    `).get(emailNormalizado);
+
+    if (cuidadorExistente) {
+      return res.status(409).json({
+        erro: "Já existe um cuidador cadastrado com esse e-mail."
+      });
+    }
+
+    const resultado = db.prepare(`
+      INSERT INTO CUIDADOR (Nome, Email, Tipo)
+      VALUES (?, ?, ?)
+    `).run(
+      Nome,
+      emailNormalizado,
+      Tipo
+    );
+
+    res.status(201).json({
+      mensagem: "Cuidador cadastrado com sucesso.",
+      Id: Number(resultado.lastInsertRowid),
+      Nome,
+      Email: emailNormalizado,
+      Tipo
+    });
+
+  } catch (erro) {
+    console.error("Erro ao cadastrar cuidador:", erro);
+
+    res.status(500).json({
+      erro: "Erro ao cadastrar o cuidador."
+    });
+  }
 });
 
 // Lista todos os idosos
+
 app.get("/api/idosos", (req, res) => {
-    try {
-        const idosos = db.prepare("SELECT * FROM IDOSO").all();
+  try {
+    const idosos = db.prepare("SELECT * FROM IDOSO").all();
 
-        res.json(idosos);
-    } catch (erro) {
-        console.error("Erro ao consultar idosos:", erro);
+    res.json(idosos);
+  } catch (erro) {
+    console.error("Erro ao consultar idosos:", erro);
 
-        res.status(500).json({
-            erro: "Erro ao consultar os idosos."
-        });
-    }
+    res.status(500).json({
+      erro: "Erro ao consultar os idosos."
+    });
+  }
 });
 
 // Cadastra um novo idoso
+
 app.post("/api/idosos", (req, res) => {
   try {
     const {
@@ -228,6 +266,7 @@ app.post("/api/idosos", (req, res) => {
 });
 
 // Atualiza um idoso existente
+
 app.put("/api/idosos/:id", (req, res) => {
   try {
     const { id } = req.params;
@@ -285,6 +324,7 @@ app.put("/api/idosos/:id", (req, res) => {
 });
 
 // Exclui um idoso existente
+
 app.delete("/api/idosos/:id", (req, res) => {
   try {
     const { id } = req.params;
@@ -314,21 +354,23 @@ app.delete("/api/idosos/:id", (req, res) => {
 });
 
 // Lista todos os medicamentos
+
 app.get("/api/medicamentos", (req, res) => {
-    try {
-        const medicamentos = db.prepare("SELECT * FROM MEDICAMENTO").all();
+  try {
+    const medicamentos = db.prepare("SELECT * FROM MEDICAMENTO").all();
 
-        res.json(medicamentos);
-    } catch (erro) {
-        console.error("Erro ao consultar medicamentos:", erro);
+    res.json(medicamentos);
+  } catch (erro) {
+    console.error("Erro ao consultar medicamentos:", erro);
 
-        res.status(500).json({
-            erro: "Erro ao consultar os medicamentos."
-        });
-    }
+    res.status(500).json({
+      erro: "Erro ao consultar os medicamentos."
+    });
+  }
 });
 
 // Cadastra um novo medicamento e gera um lembrete automaticamente
+
 app.post("/api/medicamentos", (req, res) => {
   try {
     const {
@@ -347,6 +389,7 @@ app.post("/api/medicamentos", (req, res) => {
     }
 
     // 1. Cadastra o medicamento
+
     const resultado = db.prepare(`
       INSERT INTO "MEDICAMENTO"
       ("Idoso_Id", "Nome", "Dosagem", "Horario", "Frequencia", "Observacoes")
@@ -361,9 +404,11 @@ app.post("/api/medicamentos", (req, res) => {
     );
 
     // ID do medicamento recém-criado
+
     const medicamentoId = Number(resultado.lastInsertRowid);
 
     // 2. Cria automaticamente o lembrete
+
     let lembrete = null;
 
     if (Horario) {
@@ -386,6 +431,7 @@ app.post("/api/medicamentos", (req, res) => {
     }
 
     // 3. Retorna medicamento + lembrete criado
+
     res.status(201).json({
       mensagem: "Medicamento cadastrado com sucesso.",
       Id: medicamentoId,
@@ -397,7 +443,6 @@ app.post("/api/medicamentos", (req, res) => {
       Observacoes,
       lembrete
     });
-
   } catch (erro) {
     console.error("Erro ao cadastrar medicamento:", erro);
 
@@ -408,6 +453,7 @@ app.post("/api/medicamentos", (req, res) => {
 });
 
 // Atualiza um medicamento existente e o lembrete associado
+
 app.put("/api/medicamentos/:id", (req, res) => {
   try {
     const { id } = req.params;
@@ -428,6 +474,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
     }
 
     // 1. Atualiza o medicamento
+
     const resultado = db.prepare(`
       UPDATE "MEDICAMENTO"
       SET
@@ -455,6 +502,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
     }
 
     // 2. Procura o lembrete associado ao medicamento
+
     const lembreteExistente = db.prepare(`
       SELECT *
       FROM "LEMBRETE"
@@ -466,6 +514,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
 
     // 3. Se existe lembrete e o medicamento possui horário,
     // atualiza o horário do lembrete
+
     if (lembreteExistente && Horario) {
       db.prepare(`
         UPDATE "LEMBRETE"
@@ -496,7 +545,6 @@ app.put("/api/medicamentos/:id", (req, res) => {
       Observacoes,
       lembrete
     });
-
   } catch (erro) {
     console.error("Erro ao atualizar medicamento:", erro);
 
@@ -506,19 +554,21 @@ app.put("/api/medicamentos/:id", (req, res) => {
   }
 });
 
-
 // Exclui um medicamento e o lembrete associado
+
 app.delete("/api/medicamentos/:id", (req, res) => {
   try {
     const { id } = req.params;
 
     // 1. Exclui os lembretes relacionados ao medicamento
+
     db.prepare(`
       DELETE FROM "LEMBRETE"
       WHERE "Medicamento_Id" = ?
     `).run(id);
 
     // 2. Exclui o medicamento
+
     const resultado = db.prepare(`
       DELETE FROM "MEDICAMENTO"
       WHERE "Id" = ?
@@ -534,7 +584,6 @@ app.delete("/api/medicamentos/:id", (req, res) => {
       mensagem: "Medicamento e lembretes associados excluídos com sucesso.",
       Id: Number(id)
     });
-
   } catch (erro) {
     console.error("Erro ao excluir medicamento:", erro);
 
@@ -545,21 +594,23 @@ app.delete("/api/medicamentos/:id", (req, res) => {
 });
 
 // Lista todas as ocorrências
+
 app.get("/api/ocorrencias", (req, res) => {
-    try {
-        const ocorrencias = db.prepare("SELECT * FROM OCORRENCIA").all();
+  try {
+    const ocorrencias = db.prepare("SELECT * FROM OCORRENCIA").all();
 
-        res.json(ocorrencias);
-    } catch (erro) {
-        console.error("Erro ao consultar ocorrências:", erro);
+    res.json(ocorrencias);
+  } catch (erro) {
+    console.error("Erro ao consultar ocorrências:", erro);
 
-        res.status(500).json({
-            erro: "Erro ao consultar as ocorrências."
-        });
-    }
+    res.status(500).json({
+      erro: "Erro ao consultar as ocorrências."
+    });
+  }
 });
 
 // Cadastra uma nova ocorrência
+
 app.post("/api/ocorrencias", (req, res) => {
   try {
     const {
@@ -604,6 +655,7 @@ app.post("/api/ocorrencias", (req, res) => {
 });
 
 // Atualiza uma ocorrência existente
+
 app.put("/api/ocorrencias/:id", (req, res) => {
   try {
     const { id } = req.params;
@@ -661,6 +713,7 @@ app.put("/api/ocorrencias/:id", (req, res) => {
 });
 
 // Exclui uma ocorrência existente
+
 app.delete("/api/ocorrencias/:id", (req, res) => {
   try {
     const { id } = req.params;
@@ -690,21 +743,23 @@ app.delete("/api/ocorrencias/:id", (req, res) => {
 });
 
 // Lista todos os lembretes
+
 app.get("/api/lembretes", (req, res) => {
-    try {
-        const lembretes = db.prepare("SELECT * FROM LEMBRETE").all();
+  try {
+    const lembretes = db.prepare("SELECT * FROM LEMBRETE").all();
 
-        res.json(lembretes);
-    } catch (erro) {
-        console.error("Erro ao consultar lembretes:", erro);
+    res.json(lembretes);
+  } catch (erro) {
+    console.error("Erro ao consultar lembretes:", erro);
 
-        res.status(500).json({
-            erro: "Erro ao consultar os lembretes."
-        });
-    }
+    res.status(500).json({
+      erro: "Erro ao consultar os lembretes."
+    });
+  }
 });
 
 // Cadastra um novo lembrete
+
 app.post("/api/lembretes", (req, res) => {
   try {
     const {
@@ -746,9 +801,11 @@ app.post("/api/lembretes", (req, res) => {
 });
 
 // Atualiza um lembrete existente
+
 app.put("/api/lembretes/:id", (req, res) => {
   try {
     const { id } = req.params;
+
     const {
       Medicamento_Id,
       Data_Hora,
@@ -798,6 +855,7 @@ app.put("/api/lembretes/:id", (req, res) => {
 });
 
 // Exclui um lembrete existente
+
 app.delete("/api/lembretes/:id", (req, res) => {
   try {
     const { id } = req.params;
@@ -827,5 +885,5 @@ app.delete("/api/lembretes/:id", (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });

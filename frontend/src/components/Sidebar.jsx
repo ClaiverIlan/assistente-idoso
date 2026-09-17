@@ -1,4 +1,4 @@
-function Sidebar() {
+function Sidebar({ onSair }) {
   return (
     <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white p-6 md:flex">
       <div className="mb-8">
@@ -32,6 +32,13 @@ function Sidebar() {
           ✨ Assistente
         </button>
       </nav>
+
+      <button
+        onClick={onSair}
+        className="mt-auto rounded-xl border border-red-200 px-4 py-3 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+      >
+        🚪 Sair
+      </button>
     </aside>
   );
 }

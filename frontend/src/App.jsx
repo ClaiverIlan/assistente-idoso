@@ -23,11 +23,33 @@ import IdosoForm from "./components/IdosoForm";
 import RotinaIdoso from "./components/RotinaIdoso";
 import MedicamentoForm from "./components/MedicamentoForm";
 import OcorrenciaForm from "./components/OcorrenciaForm";
+import Login from "./components/Login";
 
 function App() {
+  const [acessoLiberado, setAcessoLiberado] = useState(
+    () => localStorage.getItem("cuidadorAtual") !== null
+  );
+
   const [idosoSelecionado, setIdosoSelecionado] = useState(null);
 
   const [cuidadores, setCuidadores] = useState([]);
+
+  const [cuidadorAtual, setCuidadorAtual] = useState(() => {
+    const cuidadorSalvo = localStorage.getItem("cuidadorAtual");
+
+    if (!cuidadorSalvo) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(cuidadorSalvo);
+    } catch (erro) {
+      console.error("Erro ao recuperar cuidador salvo:", erro);
+      localStorage.removeItem("cuidadorAtual");
+      return null;
+    }
+  });
+
   const [idosos, setIdosos] = useState([]);
   const [medicamentos, setMedicamentos] = useState([]);
   const [ocorrencias, setOcorrencias] = useState([]);
@@ -127,14 +149,23 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!cuidadorAtual) {
+      setIdosos([]);
+      return;
+    }
+
     listarIdosos()
       .then((dados) => {
-        setIdosos(dados);
+        const idososDoCuidador = dados.filter(
+          (idoso) => idoso.Cuidador_Id === cuidadorAtual.Id
+        );
+
+        setIdosos(idososDoCuidador);
       })
       .catch((erro) => {
         console.error("Erro ao buscar idosos:", erro);
       });
-  }, []);
+  }, [cuidadorAtual]);
 
   useEffect(() => {
     listarMedicamentos()
@@ -173,14 +204,14 @@ function App() {
   const cadastrarIdoso = async (evento) => {
     evento.preventDefault();
 
-    if (cuidadores.length === 0) {
-      alert("Nenhum cuidador cadastrado.");
+    if (!cuidadorAtual) {
+      alert("Nenhum cuidador está conectado.");
       return;
     }
 
     try {
       const dados = await criarIdoso({
-        Cuidador_Id: cuidadores[0].Id,
+        Cuidador_Id: cuidadorAtual.Id,
         Nome: novoIdoso.Nome,
         "Data Nascimento": novoIdoso["Data Nascimento"],
         Observacoes: novoIdoso.Observacoes,
@@ -236,14 +267,14 @@ function App() {
   const editarIdoso = async (evento) => {
     evento.preventDefault();
 
-    if (cuidadores.length === 0) {
-      alert("Nenhum cuidador cadastrado.");
+    if (!cuidadorAtual) {
+      alert("Nenhum cuidador está conectado.");
       return;
     }
 
     try {
       const dados = await atualizarIdosoApi(idosoEditando.Id, {
-        Cuidador_Id: cuidadores[0].Id,
+        Cuidador_Id: cuidadorAtual.Id,
         Nome: idosoEditando.Nome,
         "Data Nascimento": idosoEditando["Data Nascimento"],
         Observacoes: idosoEditando.Observacoes,
@@ -519,20 +550,149 @@ function App() {
   };
 
   // ==============================
+  // SAIR DA CONTA
+  // ==============================
+
+  const handleSair = () => {
+  const confirmar = window.confirm(
+    "Tem certeza que deseja sair da conta?"
+  );
+
+  if (!confirmar) {
+    return;
+  }
+
+  localStorage.removeItem("cuidadorAtual");
+
+  setCuidadorAtual(null);
+  setAcessoLiberado(false);
+  setIdosoSelecionado(null);
+
+  setMostrarFormularioIdoso(false);
+  setMostrarFormularioEdicao(false);
+  setMostrarFormularioMedicamento(false);
+  setMostrarFormularioEdicaoMedicamento(false);
+  setMostrarFormularioOcorrencia(false);
+  setMostrarFormularioEdicaoOcorrencia(false);
+};
+
+  // ==============================
   // CUIDADOR ATUAL
   // ==============================
 
-  const cuidador = cuidadores[0];
+  const cuidador = cuidadorAtual;
+
+  if (!acessoLiberado) {
+    return (
+      <Login
+        onEntrar={async (email) => {
+          try {
+            const dadosCuidadores = await listarCuidadores();
+
+            const cuidadorEncontrado = dadosCuidadores.find(
+              (cuidador) =>
+                cuidador.Email?.trim().toLowerCase() ===
+                email.trim().toLowerCase()
+            );
+
+            if (!cuidadorEncontrado) {
+              alert("Nenhum cuidador encontrado com esse e-mail.");
+              return;
+            }
+
+            setCuidadores(dadosCuidadores);
+            setCuidadorAtual(cuidadorEncontrado);
+
+            localStorage.setItem(
+              "cuidadorAtual",
+              JSON.stringify(cuidadorEncontrado)
+            );
+
+            setAcessoLiberado(true);
+          } catch (erro) {
+            console.error("Erro ao realizar login:", erro);
+            alert("Não foi possível realizar o acesso.");
+          }
+        }}
+        onCadastrar={async (dados) => {
+          try {
+            const dadosCuidadores = await listarCuidadores();
+
+            const emailInformado = dados.Email
+              .trim()
+              .toLowerCase();
+
+            const emailJaCadastrado = dadosCuidadores.some(
+              (cuidador) =>
+                cuidador.Email?.trim().toLowerCase() ===
+                emailInformado
+            );
+
+            if (emailJaCadastrado) {
+              alert(
+                "Já existe um cuidador cadastrado com esse e-mail."
+              );
+              return;
+            }
+
+            const resposta = await fetch(
+              "http://localhost:3000/api/cuidadores",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  Nome: dados.Nome,
+                  Email: dados.Email.trim(),
+                  Tipo: dados.Tipo,
+                }),
+              }
+            );
+
+            const cuidadorCadastrado = await resposta.json();
+
+            if (!resposta.ok) {
+              throw new Error(
+                cuidadorCadastrado.erro ||
+                  "Erro ao cadastrar cuidador."
+              );
+            }
+
+            setCuidadores((cuidadoresAtuais) => [
+              ...cuidadoresAtuais,
+              cuidadorCadastrado,
+            ]);
+
+            setCuidadorAtual(cuidadorCadastrado);
+
+            localStorage.setItem(
+              "cuidadorAtual",
+              JSON.stringify(cuidadorCadastrado)
+            );
+
+            alert("Cuidador cadastrado com sucesso!");
+
+            setAcessoLiberado(true);
+          } catch (erro) {
+            console.error("Erro ao cadastrar cuidador:", erro);
+            alert(erro.message);
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="flex min-h-screen">
 
-        <Sidebar />
+        <Sidebar onSair={handleSair} />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
 
           {/* Cabeçalho */}
+
           <header className="mb-8">
             <p className="text-sm font-medium text-slate-500">
               Cuidador
@@ -550,9 +710,11 @@ function App() {
           </header>
 
           {/* Lista de idosos */}
+
           <section className="mb-8">
 
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+
               <div>
                 <h3 className="text-xl font-semibold text-slate-900">
                   Seus idosos
@@ -572,9 +734,11 @@ function App() {
               >
                 + Adicionar idoso
               </button>
+
             </div>
 
             {/* Formulário de cadastro de idoso */}
+
             {mostrarFormularioIdoso && (
               <IdosoForm
                 modo="adicionar"
@@ -594,6 +758,7 @@ function App() {
             )}
 
             {/* Formulário de edição de idoso */}
+
             {mostrarFormularioEdicao && (
               <IdosoForm
                 modo="editar"
@@ -607,7 +772,9 @@ function App() {
             )}
 
             {/* Cards dos idosos */}
+
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
               {idosos.map((idoso) => (
                 <IdosoCard
                   key={idoso.Id}
@@ -620,10 +787,13 @@ function App() {
                   onExcluir={excluirIdoso}
                 />
               ))}
+
             </div>
+
           </section>
 
           {/* Rotina do idoso */}
+
           {idosoSelecionado ? (
             <RotinaIdoso
               idoso={idosoSelecionado}
@@ -640,6 +810,7 @@ function App() {
               }
 
               novoMedicamento={novoMedicamento}
+
               medicamentoEditando={medicamentoEditando}
 
               setMostrarFormularioMedicamento={
@@ -651,10 +822,13 @@ function App() {
               }
 
               setNovoMedicamento={setNovoMedicamento}
+
               setMedicamentoEditando={setMedicamentoEditando}
 
               onCadastrarMedicamento={cadastrarMedicamento}
+
               onEditarMedicamento={editarMedicamento}
+
               onExcluirMedicamento={excluirMedicamento}
 
               onPrepararEdicaoMedicamento={
@@ -662,6 +836,7 @@ function App() {
               }
 
               /* Ocorrências */
+
               mostrarFormularioOcorrencia={
                 mostrarFormularioOcorrencia
               }
@@ -671,6 +846,7 @@ function App() {
               }
 
               novaOcorrencia={novaOcorrencia}
+
               ocorrenciaEditando={ocorrenciaEditando}
 
               setMostrarFormularioOcorrencia={
@@ -682,18 +858,24 @@ function App() {
               }
 
               setNovaOcorrencia={setNovaOcorrencia}
+
               setOcorrenciaEditando={setOcorrenciaEditando}
 
               onCadastrarOcorrencia={cadastrarOcorrencia}
+
               onEditarOcorrencia={editarOcorrencia}
+
               onExcluirOcorrencia={excluirOcorrencia}
 
               onPrepararEdicaoOcorrencia={
                 prepararEdicaoOcorrencia
               }
             />
+
           ) : (
+
             <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+
               <div className="mx-auto max-w-md">
 
                 <div className="text-4xl">
@@ -710,6 +892,7 @@ function App() {
                 </p>
 
               </div>
+
             </section>
           )}
 
