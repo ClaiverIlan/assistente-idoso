@@ -1,4 +1,13 @@
+import { NavLink } from "react-router-dom";
+
 function Sidebar({ onSair }) {
+  const classesDoMenu = ({ isActive }) =>
+    `rounded-xl px-4 py-3 text-left text-sm font-medium transition ${
+      isActive
+        ? "bg-slate-900 text-white"
+        : "text-slate-700 hover:bg-slate-100"
+    }`;
+
   return (
     <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white p-6 md:flex">
       <div className="mb-8">
@@ -12,25 +21,41 @@ function Sidebar({ onSair }) {
       </div>
 
       <nav className="flex flex-col gap-2">
-        <button className="rounded-xl bg-slate-900 px-4 py-3 text-left text-sm font-medium text-white">
+        <NavLink
+          to="/"
+          end
+          className={classesDoMenu}
+        >
           🏠 Início
-        </button>
+        </NavLink>
 
-        <button className="rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+        <NavLink
+          to="/idosos"
+          className={classesDoMenu}
+        >
           👥 Idosos
-        </button>
+        </NavLink>
 
-        <button className="rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+        <NavLink
+          to="/medicamentos"
+          className={classesDoMenu}
+        >
           💊 Medicamentos
-        </button>
+        </NavLink>
 
-        <button className="rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+        <NavLink
+          to="/ocorrencias"
+          className={classesDoMenu}
+        >
           ⚠️ Ocorrências
-        </button>
+        </NavLink>
 
-        <button className="rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+        <NavLink
+          to="/assistente"
+          className={classesDoMenu}
+        >
           ✨ Assistente
-        </button>
+        </NavLink>
       </nav>
 
       <button

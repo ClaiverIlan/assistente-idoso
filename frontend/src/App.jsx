@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import {
   listarCuidadores,
@@ -24,6 +25,8 @@ import RotinaIdoso from "./components/RotinaIdoso";
 import MedicamentoForm from "./components/MedicamentoForm";
 import OcorrenciaForm from "./components/OcorrenciaForm";
 import Login from "./components/Login";
+import Dashboard from "./pages/Dashboard";
+import Idosos from "./pages/Idosos";
 
 function App() {
   const [acessoLiberado, setAcessoLiberado] = useState(
@@ -54,6 +57,8 @@ function App() {
   const [medicamentos, setMedicamentos] = useState([]);
   const [ocorrencias, setOcorrencias] = useState([]);
   const [lembretes, setLembretes] = useState([]);
+
+  const location = useLocation();
 
   // ==============================
   // FORMULÁRIO DE IDOSO
@@ -554,27 +559,27 @@ function App() {
   // ==============================
 
   const handleSair = () => {
-  const confirmar = window.confirm(
-    "Tem certeza que deseja sair da conta?"
-  );
+    const confirmar = window.confirm(
+      "Tem certeza que deseja sair da conta?"
+    );
 
-  if (!confirmar) {
-    return;
-  }
+    if (!confirmar) {
+      return;
+    }
 
-  localStorage.removeItem("cuidadorAtual");
+    localStorage.removeItem("cuidadorAtual");
 
-  setCuidadorAtual(null);
-  setAcessoLiberado(false);
-  setIdosoSelecionado(null);
+    setCuidadorAtual(null);
+    setAcessoLiberado(false);
+    setIdosoSelecionado(null);
 
-  setMostrarFormularioIdoso(false);
-  setMostrarFormularioEdicao(false);
-  setMostrarFormularioMedicamento(false);
-  setMostrarFormularioEdicaoMedicamento(false);
-  setMostrarFormularioOcorrencia(false);
-  setMostrarFormularioEdicaoOcorrencia(false);
-};
+    setMostrarFormularioIdoso(false);
+    setMostrarFormularioEdicao(false);
+    setMostrarFormularioMedicamento(false);
+    setMostrarFormularioEdicaoMedicamento(false);
+    setMostrarFormularioOcorrencia(false);
+    setMostrarFormularioEdicaoOcorrencia(false);
+  };
 
   // ==============================
   // CUIDADOR ATUAL
@@ -691,112 +696,36 @@ function App() {
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
 
-          {/* Cabeçalho */}
+          {location.pathname === "/" ? (
+            <Dashboard
+              cuidador={cuidador}
+              idosos={idosos}
+              medicamentos={medicamentos}
+              lembretes={lembretes}
+              ocorrencias={ocorrencias}
+            />
+          ) : location.pathname === "/idosos" ? (
+            <Idosos
+              idosos={idosos}
+              idosoSelecionado={idosoSelecionado}
+              setIdosoSelecionado={setIdosoSelecionado}
 
-          <header className="mb-8">
-            <p className="text-sm font-medium text-slate-500">
-              Cuidador
-            </p>
+              mostrarFormularioIdoso={mostrarFormularioIdoso}
+              setMostrarFormularioIdoso={setMostrarFormularioIdoso}
 
-            <h2 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
-              {cuidador
-                ? `Olá, ${cuidador.Nome}`
-                : "Bem-vindo"}
-            </h2>
+              novoIdoso={novoIdoso}
+              setNovoIdoso={setNovoIdoso}
+              cadastrarIdoso={cadastrarIdoso}
 
-            <p className="mt-2 text-slate-500">
-              Acompanhe a rotina dos seus idosos.
-            </p>
-          </header>
+              mostrarFormularioEdicao={mostrarFormularioEdicao}
+              setMostrarFormularioEdicao={setMostrarFormularioEdicao}
 
-          {/* Lista de idosos */}
+              idosoEditando={idosoEditando}
+              setIdosoEditando={setIdosoEditando}
+              editarIdoso={editarIdoso}
+              prepararEdicaoIdoso={prepararEdicaoIdoso}
+              excluirIdoso={excluirIdoso}
 
-          <section className="mb-8">
-
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">
-                  Seus idosos
-                </h3>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Selecione um idoso para visualizar sua rotina.
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  setMostrarFormularioIdoso(true);
-                  setMostrarFormularioEdicao(false);
-                }}
-                className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-              >
-                + Adicionar idoso
-              </button>
-
-            </div>
-
-            {/* Formulário de cadastro de idoso */}
-
-            {mostrarFormularioIdoso && (
-              <IdosoForm
-                modo="adicionar"
-                dados={novoIdoso}
-                onChange={setNovoIdoso}
-                onSubmit={cadastrarIdoso}
-                onCancelar={() => {
-                  setMostrarFormularioIdoso(false);
-
-                  setNovoIdoso({
-                    Nome: "",
-                    "Data Nascimento": "",
-                    Observacoes: "",
-                  });
-                }}
-              />
-            )}
-
-            {/* Formulário de edição de idoso */}
-
-            {mostrarFormularioEdicao && (
-              <IdosoForm
-                modo="editar"
-                dados={idosoEditando}
-                onChange={setIdosoEditando}
-                onSubmit={editarIdoso}
-                onCancelar={() => {
-                  setMostrarFormularioEdicao(false);
-                }}
-              />
-            )}
-
-            {/* Cards dos idosos */}
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-              {idosos.map((idoso) => (
-                <IdosoCard
-                  key={idoso.Id}
-                  idoso={idoso}
-                  selecionado={
-                    idosoSelecionado?.Id === idoso.Id
-                  }
-                  onSelecionar={setIdosoSelecionado}
-                  onEditar={prepararEdicaoIdoso}
-                  onExcluir={excluirIdoso}
-                />
-              ))}
-
-            </div>
-
-          </section>
-
-          {/* Rotina do idoso */}
-
-          {idosoSelecionado ? (
-            <RotinaIdoso
-              idoso={idosoSelecionado}
               medicamentos={medicamentos}
               lembretes={lembretes}
               ocorrencias={ocorrencias}
@@ -810,7 +739,6 @@ function App() {
               }
 
               novoMedicamento={novoMedicamento}
-
               medicamentoEditando={medicamentoEditando}
 
               setMostrarFormularioMedicamento={
@@ -822,20 +750,16 @@ function App() {
               }
 
               setNovoMedicamento={setNovoMedicamento}
-
-              setMedicamentoEditando={setMedicamentoEditando}
-
-              onCadastrarMedicamento={cadastrarMedicamento}
-
-              onEditarMedicamento={editarMedicamento}
-
-              onExcluirMedicamento={excluirMedicamento}
-
-              onPrepararEdicaoMedicamento={
-                prepararEdicaoMedicamento
+              setMedicamentoEditando={
+                setMedicamentoEditando
               }
 
-              /* Ocorrências */
+              cadastrarMedicamento={cadastrarMedicamento}
+              editarMedicamento={editarMedicamento}
+              excluirMedicamento={excluirMedicamento}
+              prepararEdicaoMedicamento={
+                prepararEdicaoMedicamento
+              }
 
               mostrarFormularioOcorrencia={
                 mostrarFormularioOcorrencia
@@ -846,7 +770,6 @@ function App() {
               }
 
               novaOcorrencia={novaOcorrencia}
-
               ocorrenciaEditando={ocorrenciaEditando}
 
               setMostrarFormularioOcorrencia={
@@ -858,42 +781,243 @@ function App() {
               }
 
               setNovaOcorrencia={setNovaOcorrencia}
-
               setOcorrenciaEditando={setOcorrenciaEditando}
 
-              onCadastrarOcorrencia={cadastrarOcorrencia}
-
-              onEditarOcorrencia={editarOcorrencia}
-
-              onExcluirOcorrencia={excluirOcorrencia}
-
-              onPrepararEdicaoOcorrencia={
+              cadastrarOcorrencia={cadastrarOcorrencia}
+              editarOcorrencia={editarOcorrencia}
+              excluirOcorrencia={excluirOcorrencia}
+              prepararEdicaoOcorrencia={
                 prepararEdicaoOcorrencia
               }
             />
-
           ) : (
+            <>
+              {/* Cabeçalho */}
 
-            <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-
-              <div className="mx-auto max-w-md">
-
-                <div className="text-4xl">
-                  👋
-                </div>
-
-                <h3 className="mt-4 text-xl font-semibold text-slate-900">
-                  Selecione um idoso
-                </h3>
-
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Escolha um dos idosos acima para visualizar
-                  medicamentos, lembretes e ocorrências.
+              <header className="mb-8">
+                <p className="text-sm font-medium text-slate-500">
+                  Cuidador
                 </p>
 
-              </div>
+                <h2 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
+                  {cuidador
+                    ? `Olá, ${cuidador.Nome}`
+                    : "Bem-vindo"}
+                </h2>
 
-            </section>
+                <p className="mt-2 text-slate-500">
+                  Acompanhe a rotina dos seus idosos.
+                </p>
+              </header>
+
+              {/* Lista de idosos */}
+
+              <section className="mb-8">
+
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+
+                  <div>
+                    <h3 className="text-xl font-semibold text-slate-900">
+                      Seus idosos
+                    </h3>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      Selecione um idoso para visualizar sua rotina.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setMostrarFormularioIdoso(true);
+                      setMostrarFormularioEdicao(false);
+                    }}
+                    className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  >
+                    + Adicionar idoso
+                  </button>
+
+                </div>
+
+                {/* Formulário de cadastro de idoso */}
+
+                {mostrarFormularioIdoso && (
+                  <IdosoForm
+                    modo="adicionar"
+                    dados={novoIdoso}
+                    onChange={setNovoIdoso}
+                    onSubmit={cadastrarIdoso}
+                    onCancelar={() => {
+                      setMostrarFormularioIdoso(false);
+
+                      setNovoIdoso({
+                        Nome: "",
+                        "Data Nascimento": "",
+                        Observacoes: "",
+                      });
+                    }}
+                  />
+                )}
+
+                {/* Formulário de edição de idoso */}
+
+                {mostrarFormularioEdicao && (
+                  <IdosoForm
+                    modo="editar"
+                    dados={idosoEditando}
+                    onChange={setIdosoEditando}
+                    onSubmit={editarIdoso}
+                    onCancelar={() => {
+                      setMostrarFormularioEdicao(false);
+                    }}
+                  />
+                )}
+
+                {/* Cards dos idosos */}
+
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+                  {idosos.map((idoso) => (
+                    <IdosoCard
+                      key={idoso.Id}
+                      idoso={idoso}
+                      selecionado={
+                        idosoSelecionado?.Id === idoso.Id
+                      }
+                      onSelecionar={setIdosoSelecionado}
+                      onEditar={prepararEdicaoIdoso}
+                      onExcluir={excluirIdoso}
+                    />
+                  ))}
+
+                </div>
+
+              </section>
+
+              {/* Rotina do idoso */}
+
+              {idosoSelecionado ? (
+                <RotinaIdoso
+                  idoso={idosoSelecionado}
+                  medicamentos={medicamentos}
+                  lembretes={lembretes}
+                  ocorrencias={ocorrencias}
+
+                  mostrarFormularioMedicamento={
+                    mostrarFormularioMedicamento
+                  }
+
+                  mostrarFormularioEdicaoMedicamento={
+                    mostrarFormularioEdicaoMedicamento
+                  }
+
+                  novoMedicamento={novoMedicamento}
+
+                  medicamentoEditando={medicamentoEditando}
+
+                  setMostrarFormularioMedicamento={
+                    setMostrarFormularioMedicamento
+                  }
+
+                  setMostrarFormularioEdicaoMedicamento={
+                    setMostrarFormularioEdicaoMedicamento
+                  }
+
+                  setNovoMedicamento={setNovoMedicamento}
+
+                  setMedicamentoEditando={
+                    setMedicamentoEditando
+                  }
+
+                  onCadastrarMedicamento={
+                    cadastrarMedicamento
+                  }
+
+                  onEditarMedicamento={
+                    editarMedicamento
+                  }
+
+                  onExcluirMedicamento={
+                    excluirMedicamento
+                  }
+
+                  onPrepararEdicaoMedicamento={
+                    prepararEdicaoMedicamento
+                  }
+
+                  /* Ocorrências */
+
+                  mostrarFormularioOcorrencia={
+                    mostrarFormularioOcorrencia
+                  }
+
+                  mostrarFormularioEdicaoOcorrencia={
+                    mostrarFormularioEdicaoOcorrencia
+                  }
+
+                  novaOcorrencia={novaOcorrencia}
+
+                  ocorrenciaEditando={
+                    ocorrenciaEditando
+                  }
+
+                  setMostrarFormularioOcorrencia={
+                    setMostrarFormularioOcorrencia
+                  }
+
+                  setMostrarFormularioEdicaoOcorrencia={
+                    setMostrarFormularioEdicaoOcorrencia
+                  }
+
+                  setNovaOcorrencia={
+                    setNovaOcorrencia
+                  }
+
+                  setOcorrenciaEditando={
+                    setOcorrenciaEditando
+                  }
+
+                  onCadastrarOcorrencia={
+                    cadastrarOcorrencia
+                  }
+
+                  onEditarOcorrencia={
+                    editarOcorrencia
+                  }
+
+                  onExcluirOcorrencia={
+                    excluirOcorrencia
+                  }
+
+                  onPrepararEdicaoOcorrencia={
+                    prepararEdicaoOcorrencia
+                  }
+                />
+
+              ) : (
+
+                <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+
+                  <div className="mx-auto max-w-md">
+
+                    <div className="text-4xl">
+                      👋
+                    </div>
+
+                    <h3 className="mt-4 text-xl font-semibold text-slate-900">
+                      Selecione um idoso
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Escolha um dos idosos acima para visualizar
+                      medicamentos, lembretes e ocorrências.
+                    </p>
+
+                  </div>
+
+                </section>
+              )}
+
+            </>
           )}
 
         </main>
