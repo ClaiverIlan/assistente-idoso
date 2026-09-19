@@ -60,7 +60,10 @@ export function useMedicamentos(
         setMedicamentos(dados);
       })
       .catch((erro) => {
-        console.error("Erro ao buscar medicamentos:", erro);
+        console.error(
+          "Erro ao buscar medicamentos:",
+          erro
+        );
       });
   }, []);
 
@@ -100,10 +103,17 @@ export function useMedicamentos(
         ]);
       }
 
-      setNovoMedicamento(estadoInicialNovoMedicamento);
+      setNovoMedicamento(
+        estadoInicialNovoMedicamento
+      );
+
       setMostrarFormularioMedicamento(false);
     } catch (erro) {
-      console.error("Erro ao cadastrar medicamento:", erro);
+      console.error(
+        "Erro ao cadastrar medicamento:",
+        erro
+      );
+
       alert(erro.message);
     }
   };
@@ -124,7 +134,8 @@ export function useMedicamentos(
           Dosagem: medicamentoEditando.Dosagem,
           Horario: medicamentoEditando.Horario,
           Frequencia: medicamentoEditando.Frequencia,
-          Observacoes: medicamentoEditando.Observacoes,
+          Observacoes:
+            medicamentoEditando.Observacoes,
         }
       );
 
@@ -148,7 +159,11 @@ export function useMedicamentos(
 
       setMostrarFormularioEdicaoMedicamento(false);
     } catch (erro) {
-      console.error("Erro ao atualizar medicamento:", erro);
+      console.error(
+        "Erro ao atualizar medicamento:",
+        erro
+      );
+
       alert(erro.message);
     }
   };
@@ -184,7 +199,11 @@ export function useMedicamentos(
 
       setMostrarFormularioEdicaoMedicamento(false);
     } catch (erro) {
-      console.error("Erro ao excluir medicamento:", erro);
+      console.error(
+        "Erro ao excluir medicamento:",
+        erro
+      );
+
       alert(erro.message);
     }
   };
@@ -201,7 +220,8 @@ export function useMedicamentos(
       Dosagem: medicamento.Dosagem,
       Horario: medicamento.Horario,
       Frequencia: medicamento.Frequencia,
-      Observacoes: medicamento.Observacoes || "",
+      Observacoes:
+        medicamento.Observacoes || "",
     });
 
     setMostrarFormularioEdicaoMedicamento(true);
@@ -210,20 +230,14 @@ export function useMedicamentos(
 
   return {
     medicamentos,
-    setMedicamentos,
-
     mostrarFormularioMedicamento,
     setMostrarFormularioMedicamento,
-
     novoMedicamento,
     setNovoMedicamento,
-
     mostrarFormularioEdicaoMedicamento,
     setMostrarFormularioEdicaoMedicamento,
-
     medicamentoEditando,
     setMedicamentoEditando,
-
     cadastrarMedicamento,
     editarMedicamento,
     excluirMedicamento,

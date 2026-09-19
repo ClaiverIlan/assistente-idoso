@@ -1,13 +1,23 @@
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 import Sidebar from "./components/Sidebar";
+
 import Login from "./components/Login";
+
 import Dashboard from "./pages/Dashboard";
+
 import Idosos from "./pages/Idosos";
+
+import Assistente from "./pages/Assistente";
+
 import { useAutenticacao } from "./hooks/useAutenticacao";
+
 import { useIdosos } from "./hooks/useIdosos";
+
 import { useMedicamentos } from "./hooks/useMedicamentos";
+
 import { useOcorrencias } from "./hooks/useOcorrencias";
+
 import { useLembretes } from "./hooks/useLembretes";
 
 function App() {
@@ -82,7 +92,6 @@ function App() {
   // ==============================
   // SAIR DA CONTA
   // ==============================
-
   const handleSair = () => {
     const saiu = sair();
 
@@ -91,7 +100,6 @@ function App() {
     }
 
     setIdosoSelecionado(null);
-
     setMostrarFormularioIdoso(false);
     setMostrarFormularioEdicao(false);
     setMostrarFormularioMedicamento(false);
@@ -103,7 +111,6 @@ function App() {
   // ==============================
   // CUIDADOR ATUAL
   // ==============================
-
   const cuidador = cuidadorAtual;
 
   if (!acessoLiberado) {
@@ -127,90 +134,82 @@ function App() {
               idosos={idosos}
               medicamentos={medicamentos}
               lembretes={lembretes}
-              ocorrencias={ocorrencias}
             />
-          ) : (
+          ) : location.pathname === "/idosos" ? (
             <Idosos
               idosos={idosos}
               idosoSelecionado={idosoSelecionado}
               setIdosoSelecionado={setIdosoSelecionado}
-
               mostrarFormularioIdoso={mostrarFormularioIdoso}
               setMostrarFormularioIdoso={setMostrarFormularioIdoso}
-
               novoIdoso={novoIdoso}
               setNovoIdoso={setNovoIdoso}
               cadastrarIdoso={cadastrarIdoso}
-
               mostrarFormularioEdicao={mostrarFormularioEdicao}
               setMostrarFormularioEdicao={
                 setMostrarFormularioEdicao
               }
-
               idosoEditando={idosoEditando}
               setIdosoEditando={setIdosoEditando}
               editarIdoso={editarIdoso}
               prepararEdicaoIdoso={prepararEdicaoIdoso}
               excluirIdoso={excluirIdoso}
-
               medicamentos={medicamentos}
               lembretes={lembretes}
               ocorrencias={ocorrencias}
-
               mostrarFormularioMedicamento={
                 mostrarFormularioMedicamento
               }
-
               mostrarFormularioEdicaoMedicamento={
                 mostrarFormularioEdicaoMedicamento
               }
-
               novoMedicamento={novoMedicamento}
               medicamentoEditando={medicamentoEditando}
-
               setMostrarFormularioMedicamento={
                 setMostrarFormularioMedicamento
               }
-
               setMostrarFormularioEdicaoMedicamento={
                 setMostrarFormularioEdicaoMedicamento
               }
-
               setNovoMedicamento={setNovoMedicamento}
               setMedicamentoEditando={setMedicamentoEditando}
-
               cadastrarMedicamento={cadastrarMedicamento}
               editarMedicamento={editarMedicamento}
               excluirMedicamento={excluirMedicamento}
-              prepararEdicaoMedicamento={prepararEdicaoMedicamento}
-
+              prepararEdicaoMedicamento={
+                prepararEdicaoMedicamento
+              }
               mostrarFormularioOcorrencia={
                 mostrarFormularioOcorrencia
               }
-
               mostrarFormularioEdicaoOcorrencia={
                 mostrarFormularioEdicaoOcorrencia
               }
-
               novaOcorrencia={novaOcorrencia}
               ocorrenciaEditando={ocorrenciaEditando}
-
               setMostrarFormularioOcorrencia={
                 setMostrarFormularioOcorrencia
               }
-
               setMostrarFormularioEdicaoOcorrencia={
                 setMostrarFormularioEdicaoOcorrencia
               }
-
               setNovaOcorrencia={setNovaOcorrencia}
               setOcorrenciaEditando={setOcorrenciaEditando}
-
               cadastrarOcorrencia={cadastrarOcorrencia}
               editarOcorrencia={editarOcorrencia}
               excluirOcorrencia={excluirOcorrencia}
-              prepararEdicaoOcorrencia={prepararEdicaoOcorrencia}
+              prepararEdicaoOcorrencia={
+                prepararEdicaoOcorrencia
+              }
             />
+          ) : location.pathname === "/assistente" ? (
+            <Assistente
+              idosos={idosos}
+              idosoSelecionado={idosoSelecionado}
+              setIdosoSelecionado={setIdosoSelecionado}
+            />
+          ) : (
+            <Navigate to="/" replace />
           )}
         </main>
       </div>

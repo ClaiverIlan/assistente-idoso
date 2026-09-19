@@ -1,16 +1,47 @@
-# React + Vite
+# Assistente Idoso
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema web desenvolvido para apoiar cuidadores na organização e acompanhamento da rotina de pessoas idosas.
 
-Currently, two official plugins are available:
+## Sobre o projeto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+O sistema permite que o cuidador acompanhe os idosos cadastrados e organize informações relacionadas à rotina de cuidados.
 
-## React Compiler
+A aplicação possui:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- cadastro e acesso do cuidador;
+- cadastro e gerenciamento de idosos;
+- cadastro e gerenciamento de medicamentos;
+- lembretes relacionados aos medicamentos;
+- registro de ocorrências;
+- Dashboard com resumo das principais informações;
+- Assistente conversacional baseado nos dados do idoso.
 
-## Expanding the ESLint configuration
+## Tecnologias
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Frontend
+
+- React
+- Vite
+- React Router
+- Tailwind CSS
+
+### Backend
+
+- Node.js
+- Express
+- SQLite
+- Swagger
+
+## Estrutura
+
+```text
+frontend/
+└── src/
+    ├── components/
+    ├── hooks/
+    ├── pages/
+    ├── services/
+    ├── App.jsx
+    ├── App.css
+    ├── index.css
+    └── main.jsx

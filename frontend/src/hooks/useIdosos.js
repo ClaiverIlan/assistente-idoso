@@ -22,6 +22,7 @@ const estadoInicialIdosoEditando = {
 
 export function useIdosos(cuidadorAtual) {
   const [idosos, setIdosos] = useState([]);
+
   const [idosoSelecionado, setIdosoSelecionado] = useState(null);
 
   const [mostrarFormularioIdoso, setMostrarFormularioIdoso] =
@@ -52,7 +53,8 @@ export function useIdosos(cuidadorAtual) {
     listarIdosos()
       .then((dados) => {
         const idososDoCuidador = dados.filter(
-          (idoso) => idoso.Cuidador_Id === cuidadorAtual.Id
+          (idoso) =>
+            idoso.Cuidador_Id === cuidadorAtual.Id
         );
 
         setIdosos(idososDoCuidador);
@@ -78,7 +80,8 @@ export function useIdosos(cuidadorAtual) {
       const dados = await criarIdoso({
         Cuidador_Id: cuidadorAtual.Id,
         Nome: novoIdoso.Nome,
-        "Data Nascimento": novoIdoso["Data Nascimento"],
+        "Data Nascimento":
+          novoIdoso["Data Nascimento"],
         Observacoes: novoIdoso.Observacoes,
       });
 
@@ -182,7 +185,8 @@ export function useIdosos(cuidadorAtual) {
     setIdosoEditando({
       Id: idoso.Id,
       Nome: idoso.Nome,
-      "Data Nascimento": idoso["Data Nascimento"],
+      "Data Nascimento":
+        idoso["Data Nascimento"],
       Observacoes: idoso.Observacoes || "",
     });
 
@@ -192,23 +196,16 @@ export function useIdosos(cuidadorAtual) {
 
   return {
     idosos,
-    setIdosos,
-
     idosoSelecionado,
     setIdosoSelecionado,
-
     mostrarFormularioIdoso,
     setMostrarFormularioIdoso,
-
     novoIdoso,
     setNovoIdoso,
-
     mostrarFormularioEdicao,
     setMostrarFormularioEdicao,
-
     idosoEditando,
     setIdosoEditando,
-
     cadastrarIdoso,
     editarIdoso,
     excluirIdoso,

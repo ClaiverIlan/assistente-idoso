@@ -340,36 +340,6 @@ function RotinaIdoso({
           </div>
         </div>
       </div>
-
-      {/* Assistente */}
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">
-                ✨
-              </span>
-
-              <h4 className="text-lg font-semibold">
-                Assistente
-              </h4>
-            </div>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Em breve você poderá perguntar sobre a rotina de{" "}
-              {idoso.Nome}.
-            </p>
-          </div>
-
-          <button
-            disabled
-            className="rounded-xl bg-slate-200 px-5 py-3 text-sm font-semibold text-slate-500"
-          >
-            Em breve
-          </button>
-        </div>
-      </div>
     </section>
   );
 }

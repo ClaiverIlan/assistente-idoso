@@ -53,7 +53,10 @@ export function useOcorrencias() {
         setOcorrencias(dados);
       })
       .catch((erro) => {
-        console.error("Erro ao buscar ocorrências:", erro);
+        console.error(
+          "Erro ao buscar ocorrências:",
+          erro
+        );
       });
   }, []);
 
@@ -61,7 +64,10 @@ export function useOcorrencias() {
   // CADASTRAR OCORRÊNCIA
   // ==============================
 
-  const cadastrarOcorrencia = async (evento, idosoSelecionado) => {
+  const cadastrarOcorrencia = async (
+    evento,
+    idosoSelecionado
+  ) => {
     evento.preventDefault();
 
     if (!idosoSelecionado) {
@@ -112,8 +118,10 @@ export function useOcorrencias() {
         {
           Idoso_Id: ocorrenciaEditando.Idoso_Id,
           Tipo: ocorrenciaEditando.Tipo,
-          "Descrição": ocorrenciaEditando["Descrição"],
-          Data_Hora: ocorrenciaEditando.Data_Hora,
+          "Descrição":
+            ocorrenciaEditando["Descrição"],
+          Data_Hora:
+            ocorrenciaEditando.Data_Hora,
         }
       );
 
@@ -182,7 +190,8 @@ export function useOcorrencias() {
       Id: ocorrencia.Id,
       Idoso_Id: ocorrencia.Idoso_Id,
       Tipo: ocorrencia.Tipo,
-      "Descrição": ocorrencia["Descrição"],
+      "Descrição":
+        ocorrencia["Descrição"],
       Data_Hora: ocorrencia.Data_Hora,
     });
 
@@ -192,20 +201,14 @@ export function useOcorrencias() {
 
   return {
     ocorrencias,
-    setOcorrencias,
-
     mostrarFormularioOcorrencia,
     setMostrarFormularioOcorrencia,
-
     novaOcorrencia,
     setNovaOcorrencia,
-
     mostrarFormularioEdicaoOcorrencia,
     setMostrarFormularioEdicaoOcorrencia,
-
     ocorrenciaEditando,
     setOcorrenciaEditando,
-
     cadastrarOcorrencia,
     editarOcorrencia,
     excluirOcorrencia,

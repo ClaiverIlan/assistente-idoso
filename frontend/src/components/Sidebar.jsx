@@ -21,39 +21,15 @@ function Sidebar({ onSair }) {
       </div>
 
       <nav className="flex flex-col gap-2">
-        <NavLink
-          to="/"
-          end
-          className={classesDoMenu}
-        >
+        <NavLink to="/" end className={classesDoMenu}>
           🏠 Início
         </NavLink>
 
-        <NavLink
-          to="/idosos"
-          className={classesDoMenu}
-        >
+        <NavLink to="/idosos" className={classesDoMenu}>
           👥 Idosos
         </NavLink>
 
-        <NavLink
-          to="/medicamentos"
-          className={classesDoMenu}
-        >
-          💊 Medicamentos
-        </NavLink>
-
-        <NavLink
-          to="/ocorrencias"
-          className={classesDoMenu}
-        >
-          ⚠️ Ocorrências
-        </NavLink>
-
-        <NavLink
-          to="/assistente"
-          className={classesDoMenu}
-        >
+        <NavLink to="/assistente" className={classesDoMenu}>
           ✨ Assistente
         </NavLink>
       </nav>

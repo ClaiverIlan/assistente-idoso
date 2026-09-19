@@ -25,8 +25,6 @@ export function useAutenticacao() {
     () => localStorage.getItem("cuidadorAtual") !== null
   );
 
-  const [cuidadores, setCuidadores] = useState([]);
-
   const [cuidadorAtual, setCuidadorAtual] = useState(
     recuperarCuidadorSalvo
   );
@@ -46,7 +44,6 @@ export function useAutenticacao() {
         return false;
       }
 
-      setCuidadores(dadosCuidadores);
       setCuidadorAtual(cuidadorEncontrado);
 
       localStorage.setItem(
@@ -59,6 +56,7 @@ export function useAutenticacao() {
       return true;
     } catch (erro) {
       console.error("Erro ao realizar login:", erro);
+
       alert("Não foi possível realizar o acesso.");
 
       return false;
@@ -91,9 +89,11 @@ export function useAutenticacao() {
         "http://localhost:3000/api/cuidadores",
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             Nome: dados.Nome,
             Email: dados.Email.trim(),
@@ -111,11 +111,6 @@ export function useAutenticacao() {
         );
       }
 
-      setCuidadores((cuidadoresAtuais) => [
-        ...cuidadoresAtuais,
-        cuidadorCadastrado,
-      ]);
-
       setCuidadorAtual(cuidadorCadastrado);
 
       localStorage.setItem(
@@ -130,6 +125,7 @@ export function useAutenticacao() {
       return true;
     } catch (erro) {
       console.error("Erro ao cadastrar cuidador:", erro);
+
       alert(erro.message);
 
       return false;
@@ -148,6 +144,7 @@ export function useAutenticacao() {
     localStorage.removeItem("cuidadorAtual");
 
     setCuidadorAtual(null);
+
     setAcessoLiberado(false);
 
     return true;
@@ -156,7 +153,6 @@ export function useAutenticacao() {
   return {
     acessoLiberado,
     cuidadorAtual,
-    cuidadores,
     entrar,
     cadastrar,
     sair,

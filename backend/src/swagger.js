@@ -4,7 +4,8 @@ const swaggerSpec = {
   info: {
     title: "Assistente de Cuidado ao Idoso - API",
     version: "1.0.0",
-    description: "API REST do sistema Assistente de Cuidado ao Idoso"
+    description:
+      "API REST do sistema Assistente de Cuidado ao Idoso"
   },
 
   servers: [
@@ -16,28 +17,42 @@ const swaggerSpec = {
   tags: [
     {
       name: "Cuidadores",
-      description: "Operações relacionadas aos cuidadores"
+      description:
+        "Operações relacionadas aos cuidadores"
     },
+
     {
       name: "Idosos",
-      description: "Operações relacionadas aos idosos"
+      description:
+        "Operações relacionadas aos idosos"
     },
+
     {
       name: "Medicamentos",
-      description: "Operações relacionadas aos medicamentos"
+      description:
+        "Operações relacionadas aos medicamentos"
     },
+
     {
       name: "Ocorrências",
-      description: "Operações relacionadas às ocorrências"
+      description:
+        "Operações relacionadas às ocorrências"
     },
+
     {
       name: "Lembretes",
-      description: "Operações relacionadas aos lembretes"
+      description:
+        "Operações relacionadas aos lembretes"
+    },
+
+    {
+      name: "Assistente",
+      description:
+        "Operações relacionadas ao assistente conversacional"
     }
   ],
 
   paths: {
-
     // =========================
     // CUIDADORES
     // =========================
@@ -46,12 +61,16 @@ const swaggerSpec = {
       get: {
         tags: ["Cuidadores"],
         summary: "Lista todos os cuidadores",
+
         responses: {
           200: {
-            description: "Lista de cuidadores retornada com sucesso"
+            description:
+              "Lista de cuidadores retornada com sucesso"
           },
+
           500: {
-            description: "Erro ao consultar os cuidadores"
+            description:
+              "Erro ao consultar os cuidadores"
           }
         }
       },
@@ -62,20 +81,29 @@ const swaggerSpec = {
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Nome", "Email", "Tipo"],
+
+                required: [
+                  "Nome",
+                  "Email",
+                  "Tipo"
+                ],
+
                 properties: {
                   Nome: {
                     type: "string",
                     example: "Carlos da Silva"
                   },
+
                   Email: {
                     type: "string",
                     example: "carlos@email.com"
                   },
+
                   Tipo: {
                     type: "string",
                     example: "Familiar"
@@ -88,13 +116,23 @@ const swaggerSpec = {
 
         responses: {
           201: {
-            description: "Cuidador cadastrado com sucesso"
+            description:
+              "Cuidador cadastrado com sucesso"
           },
+
           400: {
-            description: "Dados obrigatórios não informados"
+            description:
+              "Dados obrigatórios não informados"
           },
+
+          409: {
+            description:
+              "Já existe um cuidador cadastrado com esse e-mail"
+          },
+
           500: {
-            description: "Erro ao cadastrar o cuidador"
+            description:
+              "Erro ao cadastrar o cuidador"
           }
         }
       }
@@ -103,36 +141,48 @@ const swaggerSpec = {
     "/api/cuidadores/{id}": {
       put: {
         tags: ["Cuidadores"],
-        summary: "Atualiza um cuidador existente",
+        summary:
+          "Atualiza um cuidador existente",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 1
           }
         ],
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Nome", "Email", "Tipo"],
+
+                required: [
+                  "Nome",
+                  "Email",
+                  "Tipo"
+                ],
+
                 properties: {
                   Nome: {
                     type: "string",
                     example: "João da Silva"
                   },
+
                   Email: {
                     type: "string",
                     example: "joao@email.com"
                   },
+
                   Tipo: {
                     type: "string",
                     example: "Familiar"
@@ -145,45 +195,60 @@ const swaggerSpec = {
 
         responses: {
           200: {
-            description: "Cuidador atualizado com sucesso"
+            description:
+              "Cuidador atualizado com sucesso"
           },
+
           400: {
-            description: "Dados obrigatórios não informados"
+            description:
+              "Dados obrigatórios não informados"
           },
+
           404: {
-            description: "Cuidador não encontrado"
+            description:
+              "Cuidador não encontrado"
           },
+
           500: {
-            description: "Erro ao atualizar o cuidador"
+            description:
+              "Erro ao atualizar o cuidador"
           }
         }
       },
 
       delete: {
         tags: ["Cuidadores"],
-        summary: "Exclui um cuidador existente",
+        summary:
+          "Exclui um cuidador existente",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 4
           }
         ],
 
         responses: {
           200: {
-            description: "Cuidador excluído com sucesso"
+            description:
+              "Cuidador excluído com sucesso"
           },
+
           404: {
-            description: "Cuidador não encontrado"
+            description:
+              "Cuidador não encontrado"
           },
+
           500: {
-            description: "Erro ao excluir o cuidador"
+            description:
+              "Erro ao excluir o cuidador"
           }
         }
       }
@@ -197,12 +262,16 @@ const swaggerSpec = {
       get: {
         tags: ["Idosos"],
         summary: "Lista todos os idosos",
+
         responses: {
           200: {
-            description: "Lista de idosos retornada com sucesso"
+            description:
+              "Lista de idosos retornada com sucesso"
           },
+
           500: {
-            description: "Erro ao consultar os idosos"
+            description:
+              "Erro ao consultar os idosos"
           }
         }
       },
@@ -213,27 +282,37 @@ const swaggerSpec = {
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Cuidador_Id", "Nome"],
+
+                required: [
+                  "Cuidador_Id",
+                  "Nome"
+                ],
+
                 properties: {
                   Cuidador_Id: {
                     type: "integer",
                     example: 1
                   },
+
                   Nome: {
                     type: "string",
                     example: "Ana da Silva"
                   },
+
                   "Data Nascimento": {
                     type: "string",
                     example: "15/08/1950"
                   },
+
                   Observacoes: {
                     type: "string",
-                    example: "Idosa de teste para validação do sistema"
+                    example:
+                      "Idosa de teste para validação do sistema"
                   }
                 }
               }
@@ -243,13 +322,18 @@ const swaggerSpec = {
 
         responses: {
           201: {
-            description: "Idoso cadastrado com sucesso"
+            description:
+              "Idoso cadastrado com sucesso"
           },
+
           400: {
-            description: "Cuidador_Id ou Nome não informado"
+            description:
+              "Cuidador_Id ou Nome não informado"
           },
+
           500: {
-            description: "Erro ao cadastrar o idoso"
+            description:
+              "Erro ao cadastrar o idoso"
           }
         }
       }
@@ -258,43 +342,56 @@ const swaggerSpec = {
     "/api/idosos/{id}": {
       put: {
         tags: ["Idosos"],
-        summary: "Atualiza um idoso existente",
+        summary:
+          "Atualiza um idoso existente",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 2
           }
         ],
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Cuidador_Id", "Nome"],
+
+                required: [
+                  "Cuidador_Id",
+                  "Nome"
+                ],
+
                 properties: {
                   Cuidador_Id: {
                     type: "integer",
                     example: 1
                   },
+
                   Nome: {
                     type: "string",
                     example: "Ana da Silva"
                   },
+
                   "Data Nascimento": {
                     type: "string",
                     example: "15/08/1950"
                   },
+
                   Observacoes: {
                     type: "string",
-                    example: "Atualização de teste pela API."
+                    example:
+                      "Atualização de teste pela API."
                   }
                 }
               }
@@ -304,45 +401,60 @@ const swaggerSpec = {
 
         responses: {
           200: {
-            description: "Idoso atualizado com sucesso"
+            description:
+              "Idoso atualizado com sucesso"
           },
+
           400: {
-            description: "Cuidador_Id ou Nome não informado"
+            description:
+              "Cuidador_Id ou Nome não informado"
           },
+
           404: {
-            description: "Idoso não encontrado"
+            description:
+              "Idoso não encontrado"
           },
+
           500: {
-            description: "Erro ao atualizar o idoso"
+            description:
+              "Erro ao atualizar o idoso"
           }
         }
       },
 
       delete: {
         tags: ["Idosos"],
-        summary: "Exclui um idoso existente",
+        summary:
+          "Exclui um idoso e seus dados relacionados",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 3
           }
         ],
 
         responses: {
           200: {
-            description: "Idoso excluído com sucesso"
+            description:
+              "Idoso e dados relacionados excluídos com sucesso"
           },
+
           404: {
-            description: "Idoso não encontrado"
+            description:
+              "Idoso não encontrado"
           },
+
           500: {
-            description: "Erro ao excluir o idoso"
+            description:
+              "Erro ao excluir o idoso"
           }
         }
       }
@@ -355,53 +467,70 @@ const swaggerSpec = {
     "/api/medicamentos": {
       get: {
         tags: ["Medicamentos"],
-        summary: "Lista todos os medicamentos",
+        summary:
+          "Lista todos os medicamentos",
 
         responses: {
           200: {
-            description: "Lista de medicamentos retornada com sucesso"
+            description:
+              "Lista de medicamentos retornada com sucesso"
           },
+
           500: {
-            description: "Erro ao consultar os medicamentos"
+            description:
+              "Erro ao consultar os medicamentos"
           }
         }
       },
 
       post: {
         tags: ["Medicamentos"],
-        summary: "Cadastra um novo medicamento",
+        summary:
+          "Cadastra um novo medicamento e cria um lembrete quando houver horário",
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Idoso_Id", "Nome"],
+
+                required: [
+                  "Idoso_Id",
+                  "Nome"
+                ],
+
                 properties: {
                   Idoso_Id: {
                     type: "integer",
                     example: 2
                   },
+
                   Nome: {
                     type: "string",
                     example: "Losartana"
                   },
+
                   Dosagem: {
                     type: "string",
                     example: "50 mg"
                   },
+
                   Horario: {
                     type: "string",
                     example: "08:00"
                   },
+
                   Frequencia: {
                     type: "string",
                     example: "1 vez ao dia"
                   },
+
                   Observacoes: {
                     type: "string",
-                    example: "Tomar pela manhã"
+                    example:
+                      "Tomar pela manhã"
                   }
                 }
               }
@@ -411,13 +540,18 @@ const swaggerSpec = {
 
         responses: {
           201: {
-            description: "Medicamento cadastrado com sucesso"
+            description:
+              "Medicamento cadastrado com sucesso"
           },
+
           400: {
-            description: "Idoso_Id ou Nome não informado"
+            description:
+              "Idoso_Id ou Nome não informado"
           },
+
           500: {
-            description: "Erro ao cadastrar o medicamento"
+            description:
+              "Erro ao cadastrar o medicamento"
           }
         }
       }
@@ -426,51 +560,66 @@ const swaggerSpec = {
     "/api/medicamentos/{id}": {
       put: {
         tags: ["Medicamentos"],
-        summary: "Atualiza um medicamento existente",
+        summary:
+          "Atualiza um medicamento e sincroniza seu lembrete",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 3
           }
         ],
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Idoso_Id", "Nome"],
+
+                required: [
+                  "Idoso_Id",
+                  "Nome"
+                ],
+
                 properties: {
                   Idoso_Id: {
                     type: "integer",
                     example: 2
                   },
+
                   Nome: {
                     type: "string",
                     example: "Losartana"
                   },
+
                   Dosagem: {
                     type: "string",
                     example: "100 mg"
                   },
+
                   Horario: {
                     type: "string",
                     example: "08:00"
                   },
+
                   Frequencia: {
                     type: "string",
                     example: "1 vez ao dia"
                   },
+
                   Observacoes: {
                     type: "string",
-                    example: "Tomar pela manhã."
+                    example:
+                      "Tomar pela manhã."
                   }
                 }
               }
@@ -480,45 +629,60 @@ const swaggerSpec = {
 
         responses: {
           200: {
-            description: "Medicamento atualizado com sucesso"
+            description:
+              "Medicamento atualizado com sucesso"
           },
+
           400: {
-            description: "Idoso_Id ou Nome não informado"
+            description:
+              "Idoso_Id ou Nome não informado"
           },
+
           404: {
-            description: "Medicamento não encontrado"
+            description:
+              "Medicamento não encontrado"
           },
+
           500: {
-            description: "Erro ao atualizar o medicamento"
+            description:
+              "Erro ao atualizar o medicamento"
           }
         }
       },
 
       delete: {
         tags: ["Medicamentos"],
-        summary: "Exclui um medicamento existente",
+        summary:
+          "Exclui um medicamento e seus lembretes associados",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 4
           }
         ],
 
         responses: {
           200: {
-            description: "Medicamento excluído com sucesso"
+            description:
+              "Medicamento e lembretes associados excluídos com sucesso"
           },
+
           404: {
-            description: "Medicamento não encontrado"
+            description:
+              "Medicamento não encontrado"
           },
+
           500: {
-            description: "Erro ao excluir o medicamento"
+            description:
+              "Erro ao excluir o medicamento"
           }
         }
       }
@@ -531,45 +695,63 @@ const swaggerSpec = {
     "/api/ocorrencias": {
       get: {
         tags: ["Ocorrências"],
-        summary: "Lista todas as ocorrências",
+        summary:
+          "Lista todas as ocorrências",
 
         responses: {
           200: {
-            description: "Lista de ocorrências retornada com sucesso"
+            description:
+              "Lista de ocorrências retornada com sucesso"
           },
+
           500: {
-            description: "Erro ao consultar as ocorrências"
+            description:
+              "Erro ao consultar as ocorrências"
           }
         }
       },
 
       post: {
         tags: ["Ocorrências"],
-        summary: "Cadastra uma nova ocorrência",
+        summary:
+          "Cadastra uma nova ocorrência",
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Idoso_Id", "Tipo", "Descrição", "Data_Hora"],
+
+                required: [
+                  "Idoso_Id",
+                  "Tipo",
+                  "Descrição",
+                  "Data_Hora"
+                ],
+
                 properties: {
                   Idoso_Id: {
                     type: "integer",
                     example: 2
                   },
+
                   Tipo: {
                     type: "string",
                     example: "Queda"
                   },
+
                   "Descrição": {
                     type: "string",
-                    example: "Idosa apresentou uma queda."
+                    example:
+                      "Idosa apresentou uma queda."
                   },
+
                   Data_Hora: {
                     type: "string",
-                    example: "2026-09-03 18:00:00"
+                    example:
+                      "2026-09-03 18:00:00"
                   }
                 }
               }
@@ -579,13 +761,18 @@ const swaggerSpec = {
 
         responses: {
           201: {
-            description: "Ocorrência cadastrada com sucesso"
+            description:
+              "Ocorrência cadastrada com sucesso"
           },
+
           400: {
-            description: "Dados obrigatórios não informados"
+            description:
+              "Dados obrigatórios não informados"
           },
+
           500: {
-            description: "Erro ao cadastrar a ocorrência"
+            description:
+              "Erro ao cadastrar a ocorrência"
           }
         }
       }
@@ -594,43 +781,59 @@ const swaggerSpec = {
     "/api/ocorrencias/{id}": {
       put: {
         tags: ["Ocorrências"],
-        summary: "Atualiza uma ocorrência existente",
+        summary:
+          "Atualiza uma ocorrência existente",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 4
           }
         ],
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Idoso_Id", "Tipo", "Descrição", "Data_Hora"],
+
+                required: [
+                  "Idoso_Id",
+                  "Tipo",
+                  "Descrição",
+                  "Data_Hora"
+                ],
+
                 properties: {
                   Idoso_Id: {
                     type: "integer",
                     example: 2
                   },
+
                   Tipo: {
                     type: "string",
                     example: "Queda"
                   },
+
                   "Descrição": {
                     type: "string",
-                    example: "Idosa apresentou uma queda durante a tarde."
+                    example:
+                      "Idosa apresentou uma queda durante a tarde."
                   },
+
                   Data_Hora: {
                     type: "string",
-                    example: "2026-09-03 18:30:00"
+                    example:
+                      "2026-09-03 18:30:00"
                   }
                 }
               }
@@ -640,45 +843,60 @@ const swaggerSpec = {
 
         responses: {
           200: {
-            description: "Ocorrência atualizada com sucesso"
+            description:
+              "Ocorrência atualizada com sucesso"
           },
+
           400: {
-            description: "Dados obrigatórios não informados"
+            description:
+              "Dados obrigatórios não informados"
           },
+
           404: {
-            description: "Ocorrência não encontrada"
+            description:
+              "Ocorrência não encontrada"
           },
+
           500: {
-            description: "Erro ao atualizar a ocorrência"
+            description:
+              "Erro ao atualizar a ocorrência"
           }
         }
       },
 
       delete: {
         tags: ["Ocorrências"],
-        summary: "Exclui uma ocorrência existente",
+        summary:
+          "Exclui uma ocorrência existente",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 5
           }
         ],
 
         responses: {
           200: {
-            description: "Ocorrência excluída com sucesso"
+            description:
+              "Ocorrência excluída com sucesso"
           },
+
           404: {
-            description: "Ocorrência não encontrada"
+            description:
+              "Ocorrência não encontrada"
           },
+
           500: {
-            description: "Erro ao excluir a ocorrência"
+            description:
+              "Erro ao excluir a ocorrência"
           }
         }
       }
@@ -691,38 +909,53 @@ const swaggerSpec = {
     "/api/lembretes": {
       get: {
         tags: ["Lembretes"],
-        summary: "Lista todos os lembretes",
+        summary:
+          "Lista todos os lembretes",
 
         responses: {
           200: {
-            description: "Lista de lembretes retornada com sucesso"
+            description:
+              "Lista de lembretes retornada com sucesso"
           },
+
           500: {
-            description: "Erro ao consultar os lembretes"
+            description:
+              "Erro ao consultar os lembretes"
           }
         }
       },
 
       post: {
         tags: ["Lembretes"],
-        summary: "Cadastra um novo lembrete",
+        summary:
+          "Cadastra um novo lembrete",
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Medicamento_Id", "Data_Hora", "Status"],
+
+                required: [
+                  "Medicamento_Id",
+                  "Data_Hora",
+                  "Status"
+                ],
+
                 properties: {
                   Medicamento_Id: {
                     type: "integer",
                     example: 3
                   },
+
                   Data_Hora: {
                     type: "string",
-                    example: "2026-09-04 08:00:00"
+                    example:
+                      "2026-09-04 08:00:00"
                   },
+
                   Status: {
                     type: "string",
                     example: "Pendente"
@@ -735,13 +968,18 @@ const swaggerSpec = {
 
         responses: {
           201: {
-            description: "Lembrete cadastrado com sucesso"
+            description:
+              "Lembrete cadastrado com sucesso"
           },
+
           400: {
-            description: "Dados obrigatórios não informados"
+            description:
+              "Dados obrigatórios não informados"
           },
+
           500: {
-            description: "Erro ao cadastrar o lembrete"
+            description:
+              "Erro ao cadastrar o lembrete"
           }
         }
       }
@@ -750,36 +988,49 @@ const swaggerSpec = {
     "/api/lembretes/{id}": {
       put: {
         tags: ["Lembretes"],
-        summary: "Atualiza um lembrete existente",
+        summary:
+          "Atualiza um lembrete existente",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 3
           }
         ],
 
         requestBody: {
           required: true,
+
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["Medicamento_Id", "Data_Hora", "Status"],
+
+                required: [
+                  "Medicamento_Id",
+                  "Data_Hora",
+                  "Status"
+                ],
+
                 properties: {
                   Medicamento_Id: {
                     type: "integer",
                     example: 3
                   },
+
                   Data_Hora: {
                     type: "string",
-                    example: "2026-09-04 08:00:00"
+                    example:
+                      "2026-09-04 08:00:00"
                   },
+
                   Status: {
                     type: "string",
                     example: "Concluído"
@@ -792,45 +1043,127 @@ const swaggerSpec = {
 
         responses: {
           200: {
-            description: "Lembrete atualizado com sucesso"
+            description:
+              "Lembrete atualizado com sucesso"
           },
+
           400: {
-            description: "Dados obrigatórios não informados"
+            description:
+              "Dados obrigatórios não informados"
           },
+
           404: {
-            description: "Lembrete não encontrado"
+            description:
+              "Lembrete não encontrado"
           },
+
           500: {
-            description: "Erro ao atualizar o lembrete"
+            description:
+              "Erro ao atualizar o lembrete"
           }
         }
       },
 
       delete: {
         tags: ["Lembretes"],
-        summary: "Exclui um lembrete existente",
+        summary:
+          "Exclui um lembrete existente",
 
         parameters: [
           {
             name: "id",
             in: "path",
             required: true,
+
             schema: {
               type: "integer"
             },
+
             example: 4
           }
         ],
 
         responses: {
           200: {
-            description: "Lembrete excluído com sucesso"
+            description:
+              "Lembrete excluído com sucesso"
           },
+
           404: {
-            description: "Lembrete não encontrado"
+            description:
+              "Lembrete não encontrado"
           },
+
           500: {
-            description: "Erro ao excluir o lembrete"
+            description:
+              "Erro ao excluir o lembrete"
+          }
+        }
+      }
+    },
+
+    // =========================
+    // ASSISTENTE
+    // =========================
+
+    "/api/assistente/contexto": {
+      post: {
+        tags: ["Assistente"],
+        summary:
+          "Monta o contexto de um idoso para o Assistente",
+
+        description:
+          "Busca os dados do idoso, seus medicamentos, lembretes e ocorrências para formar o contexto que será utilizado posteriormente pelo assistente conversacional.",
+
+        requestBody: {
+          required: true,
+
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+
+                required: [
+                  "idosoId",
+                  "pergunta"
+                ],
+
+                properties: {
+                  idosoId: {
+                    type: "integer",
+                    example: 5
+                  },
+
+                  pergunta: {
+                    type: "string",
+                    example:
+                      "Quais medicamentos esse idoso utiliza?"
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        responses: {
+          200: {
+            description:
+              "Contexto do idoso montado com sucesso"
+          },
+
+          400: {
+            description:
+              "idosoId ou pergunta não informado"
+          },
+
+          404: {
+            description:
+              "Idoso não encontrado"
+          },
+
+          500: {
+            description:
+              "Erro ao montar o contexto do Assistente"
           }
         }
       }

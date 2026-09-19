@@ -1,3 +1,61 @@
+function formatarDataParaInput(data) {
+  if (!data) {
+    return "";
+  }
+
+  const valor = String(data).trim();
+
+  // Já está no formato usado pelo input[type="date"]
+  if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    return valor;
+  }
+
+  // Converte DD/MM/AAAA para AAAA-MM-DD
+  const match = valor.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+  if (match) {
+    const [, dia, mes, ano] = match;
+
+    return `${ano}-${mes}-${dia}`;
+  }
+
+  return "";
+}
+
+function formatarDataParaSalvar(data) {
+  if (!data) {
+    return "";
+  }
+
+  const valor = String(data).trim();
+
+  // Converte AAAA-MM-DD para DD/MM/AAAA
+  const match = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+  if (match) {
+    const [, ano, mes, dia] = match;
+
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  // Se já estiver em DD/MM/AAAA, mantém
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(valor)) {
+    return valor;
+  }
+
+  return valor;
+}
+
+function obterDataHoje() {
+  const hoje = new Date();
+
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoje.getDate()).padStart(2, "0");
+
+  return `${ano}-${mes}-${dia}`;
+}
+
 function IdosoForm({
   modo,
   dados,
@@ -7,14 +65,34 @@ function IdosoForm({
 }) {
   const editando = modo === "editar";
 
+  const dataParaInput = formatarDataParaInput(
+    dados["Data Nascimento"]
+  );
+
+  const handleSubmit = (evento) => {
+    evento.preventDefault();
+
+    onChange({
+      ...dados,
+      "Data Nascimento":
+        formatarDataParaSalvar(
+          dados["Data Nascimento"]
+        ),
+    });
+
+    onSubmit(evento);
+  };
+
   return (
     <form
-      onSubmit={onSubmit}
+      onSubmit={handleSubmit}
       className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
     >
       <div className="mb-5">
         <h4 className="text-lg font-semibold text-slate-900">
-          {editando ? "Editar idoso" : "Adicionar idoso"}
+          {editando
+            ? "Editar idoso"
+            : "Adicionar idoso"}
         </h4>
 
         <p className="mt-1 text-sm text-slate-500">
@@ -51,15 +129,15 @@ function IdosoForm({
           </label>
 
           <input
-            type="text"
-            value={dados["Data Nascimento"]}
+            type="date"
+            value={dataParaInput}
+            max={obterDataHoje()}
             onChange={(evento) =>
               onChange({
                 ...dados,
                 "Data Nascimento": evento.target.value,
               })
             }
-            placeholder="DD/MM/AAAA"
             required
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-slate-900"
           />
@@ -98,7 +176,9 @@ function IdosoForm({
           type="submit"
           className="rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
         >
-          {editando ? "Salvar alterações" : "Salvar idoso"}
+          {editando
+            ? "Salvar alterações"
+            : "Salvar idoso"}
         </button>
       </div>
     </form>
