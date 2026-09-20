@@ -4,11 +4,18 @@ const { DatabaseSync } = require("node:sqlite");
 const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
+const {
+  gerarRespostaAssistente,
+} = require("./services/openai");
 
 const app = express();
 const PORT = 3000;
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 // Permite receber requisições do frontend
 app.use(cors());
@@ -89,7 +96,9 @@ console.log("Banco SQLite conectado com sucesso!");
 // ========================================
 
 app.get("/", (req, res) => {
-  res.send("Backend do Assistente de Cuidado funcionando!");
+  res.send(
+    "Backend do Assistente de Cuidado funcionando!"
+  );
 });
 
 // ========================================
@@ -107,7 +116,7 @@ app.get("/api/teste-banco", (req, res) => {
     console.error("Erro ao consultar o banco:", erro);
 
     res.status(500).json({
-      erro: "Erro ao consultar o banco de dados."
+      erro: "Erro ao consultar o banco de dados.",
     });
   }
 });
@@ -125,10 +134,13 @@ app.get("/api/cuidadores", (req, res) => {
 
     res.json(cuidadores);
   } catch (erro) {
-    console.error("Erro ao consultar cuidadores:", erro);
+    console.error(
+      "Erro ao consultar cuidadores:",
+      erro
+    );
 
     res.status(500).json({
-      erro: "Erro ao consultar os cuidadores."
+      erro: "Erro ao consultar os cuidadores.",
     });
   }
 });
@@ -141,7 +153,7 @@ app.put("/api/cuidadores/:id", (req, res) => {
 
     if (!Nome || !Email || !Tipo) {
       return res.status(400).json({
-        erro: "Nome, Email e Tipo são obrigatórios."
+        erro: "Nome, Email e Tipo são obrigatórios.",
       });
     }
 
@@ -163,7 +175,7 @@ app.put("/api/cuidadores/:id", (req, res) => {
 
     if (resultado.changes === 0) {
       return res.status(404).json({
-        erro: "Cuidador não encontrado."
+        erro: "Cuidador não encontrado.",
       });
     }
 
@@ -172,13 +184,16 @@ app.put("/api/cuidadores/:id", (req, res) => {
       Id: Number(id),
       Nome,
       Email,
-      Tipo
+      Tipo,
     });
   } catch (erro) {
-    console.error("Erro ao atualizar cuidador:", erro);
+    console.error(
+      "Erro ao atualizar cuidador:",
+      erro
+    );
 
     res.status(500).json({
-      erro: "Erro ao atualizar o cuidador."
+      erro: "Erro ao atualizar o cuidador.",
     });
   }
 });
@@ -197,19 +212,22 @@ app.delete("/api/cuidadores/:id", (req, res) => {
 
     if (resultado.changes === 0) {
       return res.status(404).json({
-        erro: "Cuidador não encontrado."
+        erro: "Cuidador não encontrado.",
       });
     }
 
     res.json({
       mensagem: "Cuidador excluído com sucesso.",
-      Id: Number(id)
+      Id: Number(id),
     });
   } catch (erro) {
-    console.error("Erro ao excluir cuidador:", erro);
+    console.error(
+      "Erro ao excluir cuidador:",
+      erro
+    );
 
     res.status(500).json({
-      erro: "Erro ao excluir o cuidador."
+      erro: "Erro ao excluir o cuidador.",
     });
   }
 });
@@ -221,7 +239,7 @@ app.post("/api/cuidadores", (req, res) => {
 
     if (!Nome || !Email || !Tipo) {
       return res.status(400).json({
-        erro: "Nome, Email e Tipo são obrigatórios."
+        erro: "Nome, Email e Tipo são obrigatórios.",
       });
     }
 
@@ -240,7 +258,8 @@ app.post("/api/cuidadores", (req, res) => {
 
     if (cuidadorExistente) {
       return res.status(409).json({
-        erro: "Já existe um cuidador cadastrado com esse e-mail."
+        erro:
+          "Já existe um cuidador cadastrado com esse e-mail.",
       });
     }
 
@@ -260,13 +279,16 @@ app.post("/api/cuidadores", (req, res) => {
       Id: Number(resultado.lastInsertRowid),
       Nome,
       Email: emailNormalizado,
-      Tipo
+      Tipo,
     });
   } catch (erro) {
-    console.error("Erro ao cadastrar cuidador:", erro);
+    console.error(
+      "Erro ao cadastrar cuidador:",
+      erro
+    );
 
     res.status(500).json({
-      erro: "Erro ao cadastrar o cuidador."
+      erro: "Erro ao cadastrar o cuidador.",
     });
   }
 });
@@ -284,10 +306,13 @@ app.get("/api/idosos", (req, res) => {
 
     res.json(idosos);
   } catch (erro) {
-    console.error("Erro ao consultar idosos:", erro);
+    console.error(
+      "Erro ao consultar idosos:",
+      erro
+    );
 
     res.status(500).json({
-      erro: "Erro ao consultar os idosos."
+      erro: "Erro ao consultar os idosos.",
     });
   }
 });
@@ -299,12 +324,12 @@ app.post("/api/idosos", (req, res) => {
       Cuidador_Id,
       Nome,
       "Data Nascimento": DataNascimento,
-      Observacoes
+      Observacoes,
     } = req.body;
 
     if (!Cuidador_Id || !Nome) {
       return res.status(400).json({
-        erro: "Cuidador_Id e Nome são obrigatórios."
+        erro: "Cuidador_Id e Nome são obrigatórios.",
       });
     }
 
@@ -327,13 +352,16 @@ app.post("/api/idosos", (req, res) => {
       Cuidador_Id,
       Nome,
       "Data Nascimento": DataNascimento,
-      Observacoes
+      Observacoes,
     });
   } catch (erro) {
-    console.error("Erro ao cadastrar idoso:", erro);
+    console.error(
+      "Erro ao cadastrar idoso:",
+      erro
+    );
 
     res.status(500).json({
-      erro: "Erro ao cadastrar o idoso."
+      erro: "Erro ao cadastrar o idoso.",
     });
   }
 });
@@ -347,12 +375,12 @@ app.put("/api/idosos/:id", (req, res) => {
       Cuidador_Id,
       Nome,
       "Data Nascimento": DataNascimento,
-      Observacoes
+      Observacoes,
     } = req.body;
 
     if (!Cuidador_Id || !Nome) {
       return res.status(400).json({
-        erro: "Cuidador_Id e Nome são obrigatórios."
+        erro: "Cuidador_Id e Nome são obrigatórios.",
       });
     }
 
@@ -376,7 +404,7 @@ app.put("/api/idosos/:id", (req, res) => {
 
     if (resultado.changes === 0) {
       return res.status(404).json({
-        erro: "Idoso não encontrado."
+        erro: "Idoso não encontrado.",
       });
     }
 
@@ -386,13 +414,16 @@ app.put("/api/idosos/:id", (req, res) => {
       Cuidador_Id,
       Nome,
       "Data Nascimento": DataNascimento,
-      Observacoes
+      Observacoes,
     });
   } catch (erro) {
-    console.error("Erro ao atualizar idoso:", erro);
+    console.error(
+      "Erro ao atualizar idoso:",
+      erro
+    );
 
     res.status(500).json({
-      erro: "Erro ao atualizar o idoso."
+      erro: "Erro ao atualizar o idoso.",
     });
   }
 });
@@ -414,7 +445,7 @@ app.delete("/api/idosos/:id", (req, res) => {
 
     if (!idoso) {
       return res.status(404).json({
-        erro: "Idoso não encontrado."
+        erro: "Idoso não encontrado.",
       });
     }
 
@@ -461,13 +492,16 @@ app.delete("/api/idosos/:id", (req, res) => {
     res.json({
       mensagem:
         "Idoso e todos os dados relacionados foram excluídos com sucesso.",
-      Id: Number(id)
+      Id: Number(id),
     });
   } catch (erro) {
-    console.error("Erro ao excluir idoso:", erro);
+    console.error(
+      "Erro ao excluir idoso:",
+      erro
+    );
 
     res.status(500).json({
-      erro: "Erro ao excluir o idoso."
+      erro: "Erro ao excluir o idoso.",
     });
   }
 });
@@ -485,10 +519,13 @@ app.get("/api/medicamentos", (req, res) => {
 
     res.json(medicamentos);
   } catch (erro) {
-    console.error("Erro ao consultar medicamentos:", erro);
+    console.error(
+      "Erro ao consultar medicamentos:",
+      erro
+    );
 
     res.status(500).json({
-      erro: "Erro ao consultar os medicamentos."
+      erro: "Erro ao consultar os medicamentos.",
     });
   }
 });
@@ -502,12 +539,12 @@ app.post("/api/medicamentos", (req, res) => {
       Dosagem,
       Horario,
       Frequencia,
-      Observacoes
+      Observacoes,
     } = req.body;
 
     if (!Idoso_Id || !Nome) {
       return res.status(400).json({
-        erro: "Idoso_Id e Nome são obrigatórios."
+        erro: "Idoso_Id e Nome são obrigatórios.",
       });
     }
 
@@ -551,12 +588,13 @@ app.post("/api/medicamentos", (req, res) => {
         ),
         Medicamento_Id: medicamentoId,
         Data_Hora: Horario,
-        Status: "Pendente"
+        Status: "Pendente",
       };
     }
 
     res.status(201).json({
-      mensagem: "Medicamento cadastrado com sucesso.",
+      mensagem:
+        "Medicamento cadastrado com sucesso.",
       Id: medicamentoId,
       Idoso_Id,
       Nome,
@@ -564,7 +602,7 @@ app.post("/api/medicamentos", (req, res) => {
       Horario,
       Frequencia,
       Observacoes,
-      lembrete
+      lembrete,
     });
   } catch (erro) {
     console.error(
@@ -573,7 +611,7 @@ app.post("/api/medicamentos", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao cadastrar o medicamento."
+      erro: "Erro ao cadastrar o medicamento.",
     });
   }
 });
@@ -589,12 +627,12 @@ app.put("/api/medicamentos/:id", (req, res) => {
       Dosagem,
       Horario,
       Frequencia,
-      Observacoes
+      Observacoes,
     } = req.body;
 
     if (!Idoso_Id || !Nome) {
       return res.status(400).json({
-        erro: "Idoso_Id e Nome são obrigatórios."
+        erro: "Idoso_Id e Nome são obrigatórios.",
       });
     }
 
@@ -622,7 +660,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
 
     if (resultado.changes === 0) {
       return res.status(404).json({
-        erro: "Medicamento não encontrado."
+        erro: "Medicamento não encontrado.",
       });
     }
 
@@ -655,7 +693,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
           Id: Number(lembreteExistente.Id),
           Medicamento_Id: Number(id),
           Data_Hora: Horario,
-          Status: lembreteExistente.Status
+          Status: lembreteExistente.Status,
         };
       }
 
@@ -679,7 +717,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
           ),
           Medicamento_Id: Number(id),
           Data_Hora: Horario,
-          Status: "Pendente"
+          Status: "Pendente",
         };
       }
     }
@@ -693,7 +731,8 @@ app.put("/api/medicamentos/:id", (req, res) => {
     }
 
     res.json({
-      mensagem: "Medicamento atualizado com sucesso.",
+      mensagem:
+        "Medicamento atualizado com sucesso.",
       Id: Number(id),
       Idoso_Id,
       Nome,
@@ -701,7 +740,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
       Horario,
       Frequencia,
       Observacoes,
-      lembrete
+      lembrete,
     });
   } catch (erro) {
     console.error(
@@ -710,7 +749,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao atualizar o medicamento."
+      erro: "Erro ao atualizar o medicamento.",
     });
   }
 });
@@ -734,14 +773,14 @@ app.delete("/api/medicamentos/:id", (req, res) => {
 
     if (resultado.changes === 0) {
       return res.status(404).json({
-        erro: "Medicamento não encontrado."
+        erro: "Medicamento não encontrado.",
       });
     }
 
     res.json({
       mensagem:
         "Medicamento e lembretes associados excluídos com sucesso.",
-      Id: Number(id)
+      Id: Number(id),
     });
   } catch (erro) {
     console.error(
@@ -750,7 +789,7 @@ app.delete("/api/medicamentos/:id", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao excluir o medicamento."
+      erro: "Erro ao excluir o medicamento.",
     });
   }
 });
@@ -774,7 +813,7 @@ app.get("/api/ocorrencias", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao consultar as ocorrências."
+      erro: "Erro ao consultar as ocorrências.",
     });
   }
 });
@@ -786,7 +825,7 @@ app.post("/api/ocorrencias", (req, res) => {
       Idoso_Id,
       Tipo,
       "Descrição": Descricao,
-      Data_Hora
+      Data_Hora,
     } = req.body;
 
     if (
@@ -797,7 +836,7 @@ app.post("/api/ocorrencias", (req, res) => {
     ) {
       return res.status(400).json({
         erro:
-          "Idoso_Id, Tipo, Descrição e Data_Hora são obrigatórios."
+          "Idoso_Id, Tipo, Descrição e Data_Hora são obrigatórios.",
       });
     }
 
@@ -815,12 +854,13 @@ app.post("/api/ocorrencias", (req, res) => {
       );
 
     res.status(201).json({
-      mensagem: "Ocorrência cadastrada com sucesso.",
+      mensagem:
+        "Ocorrência cadastrada com sucesso.",
       Id: Number(resultado.lastInsertRowid),
       Idoso_Id,
       Tipo,
       "Descrição": Descricao,
-      Data_Hora
+      Data_Hora,
     });
   } catch (erro) {
     console.error(
@@ -829,7 +869,7 @@ app.post("/api/ocorrencias", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao cadastrar a ocorrência."
+      erro: "Erro ao cadastrar a ocorrência.",
     });
   }
 });
@@ -843,7 +883,7 @@ app.put("/api/ocorrencias/:id", (req, res) => {
       Idoso_Id,
       Tipo,
       "Descrição": Descricao,
-      Data_Hora
+      Data_Hora,
     } = req.body;
 
     if (
@@ -854,7 +894,7 @@ app.put("/api/ocorrencias/:id", (req, res) => {
     ) {
       return res.status(400).json({
         erro:
-          "Idoso_Id, Tipo, Descrição e Data_Hora são obrigatórios."
+          "Idoso_Id, Tipo, Descrição e Data_Hora são obrigatórios.",
       });
     }
 
@@ -878,17 +918,18 @@ app.put("/api/ocorrencias/:id", (req, res) => {
 
     if (resultado.changes === 0) {
       return res.status(404).json({
-        erro: "Ocorrência não encontrada."
+        erro: "Ocorrência não encontrada.",
       });
     }
 
     res.json({
-      mensagem: "Ocorrência atualizada com sucesso.",
+      mensagem:
+        "Ocorrência atualizada com sucesso.",
       Id: Number(id),
       Idoso_Id,
       Tipo,
       "Descrição": Descricao,
-      Data_Hora
+      Data_Hora,
     });
   } catch (erro) {
     console.error(
@@ -897,7 +938,7 @@ app.put("/api/ocorrencias/:id", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao atualizar a ocorrência."
+      erro: "Erro ao atualizar a ocorrência.",
     });
   }
 });
@@ -916,13 +957,14 @@ app.delete("/api/ocorrencias/:id", (req, res) => {
 
     if (resultado.changes === 0) {
       return res.status(404).json({
-        erro: "Ocorrência não encontrada."
+        erro: "Ocorrência não encontrada.",
       });
     }
 
     res.json({
-      mensagem: "Ocorrência excluída com sucesso.",
-      Id: Number(id)
+      mensagem:
+        "Ocorrência excluída com sucesso.",
+      Id: Number(id),
     });
   } catch (erro) {
     console.error(
@@ -931,7 +973,7 @@ app.delete("/api/ocorrencias/:id", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao excluir a ocorrência."
+      erro: "Erro ao excluir a ocorrência.",
     });
   }
 });
@@ -955,7 +997,7 @@ app.get("/api/lembretes", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao consultar os lembretes."
+      erro: "Erro ao consultar os lembretes.",
     });
   }
 });
@@ -966,7 +1008,7 @@ app.post("/api/lembretes", (req, res) => {
     const {
       Medicamento_Id,
       Data_Hora,
-      Status
+      Status,
     } = req.body;
 
     if (
@@ -976,7 +1018,7 @@ app.post("/api/lembretes", (req, res) => {
     ) {
       return res.status(400).json({
         erro:
-          "Medicamento_Id, Data_Hora e Status são obrigatórios."
+          "Medicamento_Id, Data_Hora e Status são obrigatórios.",
       });
     }
 
@@ -993,11 +1035,12 @@ app.post("/api/lembretes", (req, res) => {
       );
 
     res.status(201).json({
-      mensagem: "Lembrete cadastrado com sucesso.",
+      mensagem:
+        "Lembrete cadastrado com sucesso.",
       Id: Number(resultado.lastInsertRowid),
       Medicamento_Id,
       Data_Hora,
-      Status
+      Status,
     });
   } catch (erro) {
     console.error(
@@ -1006,7 +1049,7 @@ app.post("/api/lembretes", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao cadastrar o lembrete."
+      erro: "Erro ao cadastrar o lembrete.",
     });
   }
 });
@@ -1019,7 +1062,7 @@ app.put("/api/lembretes/:id", (req, res) => {
     const {
       Medicamento_Id,
       Data_Hora,
-      Status
+      Status,
     } = req.body;
 
     if (
@@ -1029,7 +1072,7 @@ app.put("/api/lembretes/:id", (req, res) => {
     ) {
       return res.status(400).json({
         erro:
-          "Medicamento_Id, Data_Hora e Status são obrigatórios."
+          "Medicamento_Id, Data_Hora e Status são obrigatórios.",
       });
     }
 
@@ -1051,16 +1094,17 @@ app.put("/api/lembretes/:id", (req, res) => {
 
     if (resultado.changes === 0) {
       return res.status(404).json({
-        erro: "Lembrete não encontrado."
+        erro: "Lembrete não encontrado.",
       });
     }
 
     res.json({
-      mensagem: "Lembrete atualizado com sucesso.",
+      mensagem:
+        "Lembrete atualizado com sucesso.",
       Id: Number(id),
       Medicamento_Id,
       Data_Hora,
-      Status
+      Status,
     });
   } catch (erro) {
     console.error(
@@ -1069,7 +1113,7 @@ app.put("/api/lembretes/:id", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao atualizar o lembrete."
+      erro: "Erro ao atualizar o lembrete.",
     });
   }
 });
@@ -1088,13 +1132,14 @@ app.delete("/api/lembretes/:id", (req, res) => {
 
     if (resultado.changes === 0) {
       return res.status(404).json({
-        erro: "Lembrete não encontrado."
+        erro: "Lembrete não encontrado.",
       });
     }
 
     res.json({
-      mensagem: "Lembrete excluído com sucesso.",
-      Id: Number(id)
+      mensagem:
+        "Lembrete excluído com sucesso.",
+      Id: Number(id),
     });
   } catch (erro) {
     console.error(
@@ -1103,10 +1148,87 @@ app.delete("/api/lembretes/:id", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao excluir o lembrete."
+      erro: "Erro ao excluir o lembrete.",
     });
   }
 });
+
+// ========================================
+// FUNÇÃO DE CONTEXTO DO ASSISTENTE
+// ========================================
+
+function buscarContextoIdoso(idosoId) {
+  const idoso = db
+    .prepare(`
+      SELECT
+        "Id",
+        "Cuidador_Id",
+        "Nome",
+        "Data Nascimento",
+        "Observacoes"
+      FROM "IDOSO"
+      WHERE "Id" = ?
+      LIMIT 1
+    `)
+    .get(idosoId);
+
+  if (!idoso) {
+    return null;
+  }
+
+  const medicamentos = db
+    .prepare(`
+      SELECT
+        "Id",
+        "Idoso_Id",
+        "Nome",
+        "Dosagem",
+        "Horario",
+        "Frequencia",
+        "Observacoes"
+      FROM "MEDICAMENTO"
+      WHERE "Idoso_Id" = ?
+      ORDER BY "Horario"
+    `)
+    .all(idosoId);
+
+  const lembretes = db
+    .prepare(`
+      SELECT
+        l."Id",
+        l."Medicamento_Id",
+        l."Data_Hora",
+        l."Status",
+        m."Nome" AS "Medicamento_Nome"
+      FROM "LEMBRETE" l
+      INNER JOIN "MEDICAMENTO" m
+        ON m."Id" = l."Medicamento_Id"
+      WHERE m."Idoso_Id" = ?
+      ORDER BY l."Data_Hora"
+    `)
+    .all(idosoId);
+
+  const ocorrencias = db
+    .prepare(`
+      SELECT
+        "Id",
+        "Idoso_Id",
+        "Tipo",
+        "Descrição",
+        "Data_Hora"
+      FROM "OCORRENCIA"
+      WHERE "Idoso_Id" = ?
+      ORDER BY "Data_Hora" DESC
+    `)
+    .all(idosoId);
+
+  return {
+    idoso,
+    medicamentos,
+    lembretes,
+    ocorrencias,
+  };
+}
 
 // ========================================
 // ASSISTENTE
@@ -1119,91 +1241,21 @@ app.post("/api/assistente/contexto", (req, res) => {
 
     if (!idosoId || !pergunta) {
       return res.status(400).json({
-        erro: "idosoId e pergunta são obrigatórios."
+        erro: "idosoId e pergunta são obrigatórios.",
       });
     }
 
-    // Busca o idoso
-    const idoso = db
-      .prepare(`
-        SELECT
-          "Id",
-          "Cuidador_Id",
-          "Nome",
-          "Data Nascimento",
-          "Observacoes"
-        FROM "IDOSO"
-        WHERE "Id" = ?
-        LIMIT 1
-      `)
-      .get(idosoId);
+    const contexto = buscarContextoIdoso(idosoId);
 
-    if (!idoso) {
+    if (!contexto) {
       return res.status(404).json({
-        erro: "Idoso não encontrado."
+        erro: "Idoso não encontrado.",
       });
     }
-
-    // Busca os medicamentos do idoso
-    const medicamentos = db
-      .prepare(`
-        SELECT
-          "Id",
-          "Idoso_Id",
-          "Nome",
-          "Dosagem",
-          "Horario",
-          "Frequencia",
-          "Observacoes"
-        FROM "MEDICAMENTO"
-        WHERE "Idoso_Id" = ?
-        ORDER BY "Horario"
-      `)
-      .all(idosoId);
-
-    // Busca os lembretes relacionados aos medicamentos do idoso
-    const lembretes = db
-      .prepare(`
-        SELECT
-          l."Id",
-          l."Medicamento_Id",
-          l."Data_Hora",
-          l."Status",
-          m."Nome" AS "Medicamento_Nome"
-        FROM "LEMBRETE" l
-        INNER JOIN "MEDICAMENTO" m
-          ON m."Id" = l."Medicamento_Id"
-        WHERE m."Idoso_Id" = ?
-        ORDER BY l."Data_Hora"
-      `)
-      .all(idosoId);
-
-    // Busca as ocorrências do idoso
-    const ocorrencias = db
-      .prepare(`
-        SELECT
-          "Id",
-          "Idoso_Id",
-          "Tipo",
-          "Descrição",
-          "Data_Hora"
-        FROM "OCORRENCIA"
-        WHERE "Idoso_Id" = ?
-        ORDER BY "Data_Hora" DESC
-      `)
-      .all(idosoId);
-
-    // Contexto que será utilizado posteriormente pela IA
-    const contexto = {
-      idoso,
-      medicamentos,
-      lembretes,
-      ocorrencias
-    };
 
     res.json({
       pergunta,
-      contexto
+      contexto,
     });
   } catch (erro) {
     console.error(
@@ -1212,7 +1264,56 @@ app.post("/api/assistente/contexto", (req, res) => {
     );
 
     res.status(500).json({
-      erro: "Erro ao montar o contexto do Assistente."
+      erro: "Erro ao montar o contexto do Assistente.",
+    });
+  }
+});
+
+// Envia a pergunta e o contexto do idoso para o Assistente
+app.post("/api/assistente", async (req, res) => {
+  try {
+    const { idosoId, pergunta } = req.body;
+
+    if (!idosoId || !pergunta) {
+      return res.status(400).json({
+        erro: "idosoId e pergunta são obrigatórios.",
+      });
+    }
+
+    const contexto = buscarContextoIdoso(idosoId);
+
+    if (!contexto) {
+      return res.status(404).json({
+        erro: "Idoso não encontrado.",
+      });
+    }
+
+    // A integração ainda não será executada enquanto
+    // a chave da OpenAI não estiver configurada.
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(503).json({
+        erro:
+          "A integração com a OpenAI ainda não está configurada.",
+        contextoDisponivel: true,
+      });
+    }
+
+    const resposta = await gerarRespostaAssistente({
+      pergunta,
+      contexto,
+    });
+
+    res.json({
+      resposta,
+    });
+  } catch (erro) {
+    console.error(
+      "Erro ao gerar resposta do Assistente:",
+      erro
+    );
+
+    res.status(500).json({
+      erro: "Erro ao gerar a resposta do Assistente.",
     });
   }
 });
