@@ -1,4 +1,71 @@
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
+
+const CHAVE_ARMAZENAMENTO = "assistente-idoso:conversas:v1";
+
+function carregarConversas() {
+  try {
+    const conteudo = sessionStorage.getItem(CHAVE_ARMAZENAMENTO);
+
+    if (!conteudo) {
+      return {};
+    }
+
+    const dados = JSON.parse(conteudo);
+
+    if (
+      dados &&
+      typeof dados === "object" &&
+      !Array.isArray(dados)
+    ) {
+      return dados;
+    }
+
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+// Formata o texto do assistente sem exibir os asteriscos
+// usados para representar negrito e marcadores de lista.
+function renderizarTexto(texto) {
+  if (typeof texto !== "string") {
+    return texto;
+  }
+
+  const linhas = texto.split("\n");
+
+  return linhas.map((linha, indiceLinha) => {
+    // Remove o asterisco usado como marcador de lista.
+    const linhaLimpa = linha.replace(/^\s*\*\s+/, "");
+
+    // Separa os trechos que estão entre **.
+    const partes = linhaLimpa.split(/(\*\*.*?\*\*)/g);
+
+    return (
+      <span key={indiceLinha}>
+        {partes.map((parte, indiceParte) => {
+          if (
+            parte.startsWith("**") &&
+            parte.endsWith("**") &&
+            parte.length >= 4
+          ) {
+            return (
+              <strong key={indiceParte}>
+                {parte.slice(2, -2)}
+              </strong>
+            );
+          }
+
+          return parte;
+        })}
+
+        {indiceLinha < linhas.length - 1 && <br />}
+      </span>
+    );
+  });
+}
 
 function Assistente({
   idosos = [],
@@ -6,14 +73,61 @@ function Assistente({
   setIdosoSelecionado,
 }) {
   const [mensagem, setMensagem] = useState("");
-  const [mensagens, setMensagens] = useState([]);
-  const [carregando, setCarregando] = useState(false);
+
+  const [conversas, setConversas] = useState(carregarConversas);
+
+  const [carregandoPorConversa, setCarregandoPorConversa] =
+    useState({});
+
+  const chaveConversa = idosoSelecionado?.Id
+    ? `idoso:${idosoSelecionado.Id}`
+    : "geral";
+
+  const mensagens = conversas[chaveConversa] || [];
+
+  const carregando = Boolean(
+    carregandoPorConversa[chaveConversa]
+  );
 
   const perguntasSugeridas = [
     "Quais medicamentos esse idoso utiliza?",
     "Quais são os próximos horários de medicamento?",
     "Quais ocorrências recentes foram registradas?",
   ];
+
+  // Salva as conversas na sessão atual do navegador.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        CHAVE_ARMAZENAMENTO,
+        JSON.stringify(conversas)
+      );
+    } catch (erro) {
+      console.warn(
+        "Não foi possível salvar as conversas na sessão:",
+        erro
+      );
+    }
+  }, [conversas]);
+
+  // Atualiza apenas a conversa indicada, preservando as demais.
+  const atualizarConversa = (chave, atualizador) => {
+    setConversas((anteriores) => {
+      const mensagensAnteriores = Array.isArray(anteriores[chave])
+        ? anteriores[chave]
+        : [];
+
+      const novasMensagens =
+        typeof atualizador === "function"
+          ? atualizador(mensagensAnteriores)
+          : atualizador;
+
+      return {
+        ...anteriores,
+        [chave]: novasMensagens.slice(-100),
+      };
+    });
+  };
 
   const selecionarIdoso = (evento) => {
     const idSelecionado = Number(evento.target.value);
@@ -24,8 +138,7 @@ function Assistente({
 
     setIdosoSelecionado(idoso || null);
 
-    // Limpa a conversa ao trocar o idoso selecionado.
-    setMensagens([]);
+    // As mensagens são preservadas quando outro idoso é selecionado.
   };
 
   const usarPergunta = (pergunta) => {
@@ -41,30 +154,51 @@ function Assistente({
       return;
     }
 
-    // Guarda o idoso selecionado no momento do envio.
-    const idosoParaConsulta = idosoSelecionado;
+    // Mantém a conversa e o idoso corretos durante a requisição.
+    const chaveDaRequisicao = chaveConversa;
+    const idosoDaRequisicao = idosoSelecionado;
 
-    // Exibe a pergunta imediatamente na conversa.
-    setMensagens((anteriores) => [
-      ...anteriores,
-      {
-        autor: "usuario",
-        texto: pergunta,
-      },
-    ]);
+    // Envia as últimas mensagens válidas para manter o contexto.
+    const historico = mensagens
+      .filter(
+        (item) =>
+          item.autor === "usuario" ||
+          item.autor === "assistente"
+      )
+      .slice(-10)
+      .map(({ autor, texto }) => ({
+        autor,
+        texto,
+      }));
+
+    // Salva a pergunta na conversa correspondente.
+    atualizarConversa(
+      chaveDaRequisicao,
+      (anteriores) => [
+        ...anteriores,
+        {
+          autor: "usuario",
+          texto: pergunta,
+        },
+      ]
+    );
 
     setMensagem("");
-    setCarregando(true);
+
+    setCarregandoPorConversa((anteriores) => ({
+      ...anteriores,
+      [chaveDaRequisicao]: true,
+    }));
 
     try {
       const corpoRequisicao = {
         pergunta,
+        historico,
       };
 
-      // O idoso é opcional para perguntas gerais.
-      if (idosoParaConsulta?.Id) {
+      if (idosoDaRequisicao?.Id) {
         corpoRequisicao.idosoId = Number(
-          idosoParaConsulta.Id
+          idosoDaRequisicao.Id
         );
       }
 
@@ -97,38 +231,45 @@ function Assistente({
         );
       }
 
-      // Exibe a resposta gerada pelo backend e pelo Gemini.
-      setMensagens((anteriores) => [
-        ...anteriores,
-        {
-          autor: "assistente",
-          texto: dados.resposta,
-        },
-      ]);
+      atualizarConversa(
+        chaveDaRequisicao,
+        (anteriores) => [
+          ...anteriores,
+          {
+            autor: "assistente",
+            texto: dados.resposta,
+          },
+        ]
+      );
     } catch (erro) {
       console.error(
         "Erro ao enviar mensagem ao Assistente:",
         erro
       );
 
-      setMensagens((anteriores) => [
-        ...anteriores,
-        {
-          autor: "erro",
-          texto:
-            erro.message ||
-            "Não foi possível conectar ao Assistente. Verifique se o backend está funcionando.",
-        },
-      ]);
+      atualizarConversa(
+        chaveDaRequisicao,
+        (anteriores) => [
+          ...anteriores,
+          {
+            autor: "erro",
+            texto:
+              erro.message ||
+              "Não foi possível conectar ao Assistente. Verifique se o backend está funcionando.",
+          },
+        ]
+      );
     } finally {
-      setCarregando(false);
+      setCarregandoPorConversa((anteriores) => ({
+        ...anteriores,
+        [chaveDaRequisicao]: false,
+      }));
     }
   };
 
   return (
     <div>
       {/* CABEÇALHO */}
-
       <header className="mb-8">
         <p className="text-sm font-medium text-slate-500">
           Apoio inteligente
@@ -139,14 +280,13 @@ function Assistente({
         </h2>
 
         <p className="mt-2 max-w-2xl text-slate-500">
-          Faça perguntas em linguagem natural sobre a
-          rotina dos idosos cadastrados ou tire dúvidas
-          gerais e educativas sobre saúde.
+          Faça perguntas em linguagem natural sobre a rotina dos
+          idosos cadastrados ou tire dúvidas gerais e educativas
+          sobre saúde.
         </p>
       </header>
 
       {/* SELEÇÃO DO IDOSO */}
-
       <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-slate-900">
@@ -154,9 +294,8 @@ function Assistente({
           </h3>
 
           <p className="mt-1 text-sm text-slate-500">
-            Selecione um idoso para consultar os dados
-            cadastrados. Para perguntas gerais, a seleção
-            não é obrigatória.
+            Selecione um idoso para consultar os dados cadastrados.
+            Para perguntas gerais, a seleção não é obrigatória.
           </p>
         </div>
 
@@ -185,7 +324,6 @@ function Assistente({
       </section>
 
       {/* ÁREA DO ASSISTENTE */}
-
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <div className="mb-6 flex items-start gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-2xl">
@@ -206,7 +344,6 @@ function Assistente({
         </div>
 
         {/* ÁREA DA CONVERSA */}
-
         <div className="min-h-72 rounded-2xl bg-slate-50 p-5">
           {mensagens.length > 0 ? (
             <div className="space-y-4">
@@ -236,7 +373,9 @@ function Assistente({
                       </p>
                     )}
 
-                    {item.texto}
+                    {item.autor === "assistente"
+                      ? renderizarTexto(item.texto)
+                      : item.texto}
                   </div>
                 </div>
               ))}
@@ -265,8 +404,6 @@ function Assistente({
                 </p>
               </div>
 
-              {/* PERGUNTAS SUGERIDAS */}
-
               {idosoSelecionado && (
                 <div className="mt-6 grid gap-3 sm:grid-cols-3">
                   {perguntasSugeridas.map((pergunta) => (
@@ -286,7 +423,6 @@ function Assistente({
         </div>
 
         {/* CAMPO DE MENSAGEM */}
-
         <form
           onSubmit={enviarMensagem}
           className="mt-5 flex flex-col gap-3 sm:flex-row"
@@ -294,9 +430,7 @@ function Assistente({
           <input
             type="text"
             value={mensagem}
-            onChange={(evento) =>
-              setMensagem(evento.target.value)
-            }
+            onChange={(evento) => setMensagem(evento.target.value)}
             placeholder={
               idosoSelecionado
                 ? "Digite sua pergunta..."
@@ -316,12 +450,11 @@ function Assistente({
         </form>
 
         {/* AVISO */}
-
         <p className="mt-4 text-xs leading-5 text-slate-400">
-          O Assistente oferece informações educativas e
-          consultas aos dados registrados no sistema. Ele
-          não realiza diagnósticos nem substitui a orientação
-          de profissionais de saúde.
+          O Assistente oferece informações educativas e consultas
+          aos dados registrados no sistema. Ele não realiza
+          diagnósticos nem substitui a orientação de profissionais
+          de saúde.
         </p>
       </section>
     </div>

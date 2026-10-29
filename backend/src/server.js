@@ -1241,10 +1241,15 @@ app.post("/api/assistente/contexto", (req, res) => {
   }
 });
 
-// Gera uma resposta usando o provedor configurado
+// Gera uma resposta usando o provedor configurado,
+// com contexto atual do idoso e histórico recente da conversa.
 app.post("/api/assistente", async (req, res) => {
   try {
-    const { idosoId, pergunta } = req.body;
+    const {
+      idosoId,
+      pergunta,
+      historico = [],
+    } = req.body;
 
     if (
       typeof pergunta !== "string" ||
@@ -1255,13 +1260,13 @@ app.post("/api/assistente", async (req, res) => {
       });
     }
 
+    // O contexto do idoso é opcional para perguntas gerais.
     let contexto = null;
 
-    // O idoso é opcional para permitir dúvidas gerais de saúde.
     if (
       idosoId !== undefined &&
       idosoId !== null &&
-      idosoId !== ""
+      String(idosoId).trim() !== ""
     ) {
       const idosoIdNumerico = Number(idosoId);
 
@@ -1283,6 +1288,26 @@ app.post("/api/assistente", async (req, res) => {
       }
     }
 
+    // Valida o histórico e limita o tamanho do conteúdo
+    // enviado ao provedor.
+    const historicoSeguro = Array.isArray(historico)
+      ? historico
+          .filter(
+            (item) =>
+              item &&
+              ["usuario", "assistente"].includes(
+                item.autor
+              ) &&
+              typeof item.texto === "string" &&
+              item.texto.trim()
+          )
+          .slice(-10)
+          .map((item) => ({
+            autor: item.autor,
+            texto: item.texto.trim().slice(0, 1500),
+          }))
+      : [];
+
     // Gemini é o provedor padrão.
     // A OpenAI só será usada se for explicitamente configurada.
     const provedor = (
@@ -1296,20 +1321,19 @@ app.post("/api/assistente", async (req, res) => {
     if (provedor === "gemini") {
       if (!process.env.GEMINI_API_KEY) {
         return res.status(503).json({
-          erro:
-            "A chave do Gemini não está configurada.",
+          erro: "A chave do Gemini não está configurada.",
         });
       }
 
       resposta = await gerarRespostaAssistenteGemini({
         pergunta: pergunta.trim(),
         contexto,
+        historico: historicoSeguro,
       });
     } else if (provedor === "openai") {
       if (!process.env.OPENAI_API_KEY) {
         return res.status(503).json({
-          erro:
-            "A chave da OpenAI não está configurada.",
+          erro: "A chave da OpenAI não está configurada.",
         });
       }
 
@@ -1319,23 +1343,20 @@ app.post("/api/assistente", async (req, res) => {
       });
     } else {
       return res.status(500).json({
-        erro:
-          "Provedor inválido. Utilize gemini ou openai.",
+        erro: "Provedor inválido. Utilize gemini ou openai.",
       });
     }
 
-    res.json({
-      resposta,
-    });
+    return res.json({ resposta });
   } catch (erro) {
     console.error(
       "Erro ao gerar resposta do Assistente:",
       erro.message
     );
 
-    res.status(502).json({
+    return res.status(502).json({
       erro:
-        "Não foi possível obter uma resposta do Assistente.",
+        "Não foi possível obter uma resposta do Assistente. Tente novamente em instantes.",
     });
   }
 });
