@@ -4,9 +4,14 @@ const { DatabaseSync } = require("node:sqlite");
 const path = require("path");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
+
 const {
   gerarRespostaAssistente,
 } = require("./services/openai");
+
+const {
+  gerarRespostaAssistenteGemini,
+} = require("./services/gemini");
 
 const app = express();
 const PORT = 3000;
@@ -108,7 +113,7 @@ app.get("/", (req, res) => {
 app.get("/api/teste-banco", (req, res) => {
   try {
     const resultado = db
-      .prepare("SELECT * FROM CUIDADOR")
+      .prepare('SELECT * FROM "CUIDADOR"')
       .all();
 
     res.json(resultado);
@@ -129,7 +134,7 @@ app.get("/api/teste-banco", (req, res) => {
 app.get("/api/cuidadores", (req, res) => {
   try {
     const cuidadores = db
-      .prepare("SELECT * FROM CUIDADOR")
+      .prepare('SELECT * FROM "CUIDADOR"')
       .all();
 
     res.json(cuidadores);
@@ -166,12 +171,7 @@ app.put("/api/cuidadores/:id", (req, res) => {
           "Tipo" = ?
         WHERE "Id" = ?
       `)
-      .run(
-        Nome,
-        Email,
-        Tipo,
-        id
-      );
+      .run(Nome, Email, Tipo, id);
 
     if (resultado.changes === 0) {
       return res.status(404).json({
@@ -245,7 +245,7 @@ app.post("/api/cuidadores", (req, res) => {
 
     const emailNormalizado = Email.trim();
 
-    // Verifica se já existe um cuidador com esse e-mail
+    // Verifica se já existe um cuidador com esse e-mail,
     // ignorando diferenças entre maiúsculas/minúsculas e espaços.
     const cuidadorExistente = db
       .prepare(`
@@ -265,14 +265,10 @@ app.post("/api/cuidadores", (req, res) => {
 
     const resultado = db
       .prepare(`
-        INSERT INTO "CUIDADOR" (Nome, Email, Tipo)
+        INSERT INTO "CUIDADOR" ("Nome", "Email", "Tipo")
         VALUES (?, ?, ?)
       `)
-      .run(
-        Nome,
-        emailNormalizado,
-        Tipo
-      );
+      .run(Nome, emailNormalizado, Tipo);
 
     res.status(201).json({
       mensagem: "Cuidador cadastrado com sucesso.",
@@ -301,7 +297,7 @@ app.post("/api/cuidadores", (req, res) => {
 app.get("/api/idosos", (req, res) => {
   try {
     const idosos = db
-      .prepare("SELECT * FROM IDOSO")
+      .prepare('SELECT * FROM "IDOSO"')
       .all();
 
     res.json(idosos);
@@ -433,7 +429,6 @@ app.delete("/api/idosos/:id", (req, res) => {
   try {
     const { id } = req.params;
 
-    // Verifica se o idoso existe
     const idoso = db
       .prepare(`
         SELECT "Id"
@@ -449,11 +444,10 @@ app.delete("/api/idosos/:id", (req, res) => {
       });
     }
 
-    // Inicia uma transação
     db.exec("BEGIN TRANSACTION");
 
     try {
-      // 1. Exclui os lembretes dos medicamentos do idoso
+      // Exclui os lembretes dos medicamentos do idoso
       db.prepare(`
         DELETE FROM "LEMBRETE"
         WHERE "Medicamento_Id" IN (
@@ -463,28 +457,26 @@ app.delete("/api/idosos/:id", (req, res) => {
         )
       `).run(id);
 
-      // 2. Exclui os medicamentos do idoso
+      // Exclui os medicamentos do idoso
       db.prepare(`
         DELETE FROM "MEDICAMENTO"
         WHERE "Idoso_Id" = ?
       `).run(id);
 
-      // 3. Exclui as ocorrências do idoso
+      // Exclui as ocorrências do idoso
       db.prepare(`
         DELETE FROM "OCORRENCIA"
         WHERE "Idoso_Id" = ?
       `).run(id);
 
-      // 4. Exclui o idoso
+      // Exclui o idoso
       db.prepare(`
         DELETE FROM "IDOSO"
         WHERE "Id" = ?
       `).run(id);
 
-      // Confirma a transação
       db.exec("COMMIT");
     } catch (erroTransacao) {
-      // Desfaz tudo caso alguma etapa falhe
       db.exec("ROLLBACK");
       throw erroTransacao;
     }
@@ -514,7 +506,7 @@ app.delete("/api/idosos/:id", (req, res) => {
 app.get("/api/medicamentos", (req, res) => {
   try {
     const medicamentos = db
-      .prepare("SELECT * FROM MEDICAMENTO")
+      .prepare('SELECT * FROM "MEDICAMENTO"')
       .all();
 
     res.json(medicamentos);
@@ -530,7 +522,7 @@ app.get("/api/medicamentos", (req, res) => {
   }
 });
 
-// Cadastra um novo medicamento e gera um lembrete automaticamente
+// Cadastra um medicamento e gera um lembrete automaticamente
 app.post("/api/medicamentos", (req, res) => {
   try {
     const {
@@ -593,8 +585,7 @@ app.post("/api/medicamentos", (req, res) => {
     }
 
     res.status(201).json({
-      mensagem:
-        "Medicamento cadastrado com sucesso.",
+      mensagem: "Medicamento cadastrado com sucesso.",
       Id: medicamentoId,
       Idoso_Id,
       Nome,
@@ -616,7 +607,7 @@ app.post("/api/medicamentos", (req, res) => {
   }
 });
 
-// Atualiza um medicamento existente e sincroniza o lembrete associado
+// Atualiza um medicamento e sincroniza o lembrete associado
 app.put("/api/medicamentos/:id", (req, res) => {
   try {
     const { id } = req.params;
@@ -675,19 +666,13 @@ app.put("/api/medicamentos/:id", (req, res) => {
 
     let lembrete = null;
 
-    // Se possui horário
     if (Horario) {
-      // Se já existe lembrete, atualiza
       if (lembreteExistente) {
         db.prepare(`
           UPDATE "LEMBRETE"
-          SET
-            "Data_Hora" = ?
+          SET "Data_Hora" = ?
           WHERE "Medicamento_Id" = ?
-        `).run(
-          Horario,
-          id
-        );
+        `).run(Horario, id);
 
         lembrete = {
           Id: Number(lembreteExistente.Id),
@@ -695,10 +680,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
           Data_Hora: Horario,
           Status: lembreteExistente.Status,
         };
-      }
-
-      // Se não existe, cria
-      else {
+      } else {
         const resultadoLembrete = db
           .prepare(`
             INSERT INTO "LEMBRETE"
@@ -720,10 +702,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
           Status: "Pendente",
         };
       }
-    }
-
-    // Se ficou sem horário, remove o lembrete
-    else if (lembreteExistente) {
+    } else if (lembreteExistente) {
       db.prepare(`
         DELETE FROM "LEMBRETE"
         WHERE "Medicamento_Id" = ?
@@ -731,8 +710,7 @@ app.put("/api/medicamentos/:id", (req, res) => {
     }
 
     res.json({
-      mensagem:
-        "Medicamento atualizado com sucesso.",
+      mensagem: "Medicamento atualizado com sucesso.",
       Id: Number(id),
       Idoso_Id,
       Nome,
@@ -802,7 +780,7 @@ app.delete("/api/medicamentos/:id", (req, res) => {
 app.get("/api/ocorrencias", (req, res) => {
   try {
     const ocorrencias = db
-      .prepare("SELECT * FROM OCORRENCIA")
+      .prepare('SELECT * FROM "OCORRENCIA"')
       .all();
 
     res.json(ocorrencias);
@@ -854,8 +832,7 @@ app.post("/api/ocorrencias", (req, res) => {
       );
 
     res.status(201).json({
-      mensagem:
-        "Ocorrência cadastrada com sucesso.",
+      mensagem: "Ocorrência cadastrada com sucesso.",
       Id: Number(resultado.lastInsertRowid),
       Idoso_Id,
       Tipo,
@@ -923,8 +900,7 @@ app.put("/api/ocorrencias/:id", (req, res) => {
     }
 
     res.json({
-      mensagem:
-        "Ocorrência atualizada com sucesso.",
+      mensagem: "Ocorrência atualizada com sucesso.",
       Id: Number(id),
       Idoso_Id,
       Tipo,
@@ -962,8 +938,7 @@ app.delete("/api/ocorrencias/:id", (req, res) => {
     }
 
     res.json({
-      mensagem:
-        "Ocorrência excluída com sucesso.",
+      mensagem: "Ocorrência excluída com sucesso.",
       Id: Number(id),
     });
   } catch (erro) {
@@ -986,7 +961,7 @@ app.delete("/api/ocorrencias/:id", (req, res) => {
 app.get("/api/lembretes", (req, res) => {
   try {
     const lembretes = db
-      .prepare("SELECT * FROM LEMBRETE")
+      .prepare('SELECT * FROM "LEMBRETE"')
       .all();
 
     res.json(lembretes);
@@ -1035,8 +1010,7 @@ app.post("/api/lembretes", (req, res) => {
       );
 
     res.status(201).json({
-      mensagem:
-        "Lembrete cadastrado com sucesso.",
+      mensagem: "Lembrete cadastrado com sucesso.",
       Id: Number(resultado.lastInsertRowid),
       Medicamento_Id,
       Data_Hora,
@@ -1099,8 +1073,7 @@ app.put("/api/lembretes/:id", (req, res) => {
     }
 
     res.json({
-      mensagem:
-        "Lembrete atualizado com sucesso.",
+      mensagem: "Lembrete atualizado com sucesso.",
       Id: Number(id),
       Medicamento_Id,
       Data_Hora,
@@ -1137,8 +1110,7 @@ app.delete("/api/lembretes/:id", (req, res) => {
     }
 
     res.json({
-      mensagem:
-        "Lembrete excluído com sucesso.",
+      mensagem: "Lembrete excluído com sucesso.",
       Id: Number(id),
     });
   } catch (erro) {
@@ -1269,39 +1241,88 @@ app.post("/api/assistente/contexto", (req, res) => {
   }
 });
 
-// Envia a pergunta e o contexto do idoso para o Assistente
+// Gera uma resposta usando o provedor configurado
 app.post("/api/assistente", async (req, res) => {
   try {
     const { idosoId, pergunta } = req.body;
 
-    if (!idosoId || !pergunta) {
+    if (
+      typeof pergunta !== "string" ||
+      !pergunta.trim()
+    ) {
       return res.status(400).json({
-        erro: "idosoId e pergunta são obrigatórios.",
+        erro: "A pergunta é obrigatória.",
       });
     }
 
-    const contexto = buscarContextoIdoso(idosoId);
+    let contexto = null;
 
-    if (!contexto) {
-      return res.status(404).json({
-        erro: "Idoso não encontrado.",
-      });
+    // O idoso é opcional para permitir dúvidas gerais de saúde.
+    if (
+      idosoId !== undefined &&
+      idosoId !== null &&
+      idosoId !== ""
+    ) {
+      const idosoIdNumerico = Number(idosoId);
+
+      if (
+        !Number.isInteger(idosoIdNumerico) ||
+        idosoIdNumerico <= 0
+      ) {
+        return res.status(400).json({
+          erro: "O idoso informado é inválido.",
+        });
+      }
+
+      contexto = buscarContextoIdoso(idosoIdNumerico);
+
+      if (!contexto) {
+        return res.status(404).json({
+          erro: "Idoso não encontrado.",
+        });
+      }
     }
 
-    // A integração ainda não será executada enquanto
-    // a chave da OpenAI não estiver configurada.
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(503).json({
+    // Gemini é o provedor padrão.
+    // A OpenAI só será usada se for explicitamente configurada.
+    const provedor = (
+      process.env.ASSISTANT_PROVIDER || "gemini"
+    )
+      .trim()
+      .toLowerCase();
+
+    let resposta;
+
+    if (provedor === "gemini") {
+      if (!process.env.GEMINI_API_KEY) {
+        return res.status(503).json({
+          erro:
+            "A chave do Gemini não está configurada.",
+        });
+      }
+
+      resposta = await gerarRespostaAssistenteGemini({
+        pergunta: pergunta.trim(),
+        contexto,
+      });
+    } else if (provedor === "openai") {
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(503).json({
+          erro:
+            "A chave da OpenAI não está configurada.",
+        });
+      }
+
+      resposta = await gerarRespostaAssistente({
+        pergunta: pergunta.trim(),
+        contexto,
+      });
+    } else {
+      return res.status(500).json({
         erro:
-          "A integração com a OpenAI ainda não está configurada.",
-        contextoDisponivel: true,
+          "Provedor inválido. Utilize gemini ou openai.",
       });
     }
-
-    const resposta = await gerarRespostaAssistente({
-      pergunta,
-      contexto,
-    });
 
     res.json({
       resposta,
@@ -1309,11 +1330,12 @@ app.post("/api/assistente", async (req, res) => {
   } catch (erro) {
     console.error(
       "Erro ao gerar resposta do Assistente:",
-      erro
+      erro.message
     );
 
-    res.status(500).json({
-      erro: "Erro ao gerar a resposta do Assistente.",
+    res.status(502).json({
+      erro:
+        "Não foi possível obter uma resposta do Assistente.",
     });
   }
 });

@@ -1,11 +1,13 @@
 import { useState } from "react";
 
 function Assistente({
-  idosos,
+  idosos = [],
   idosoSelecionado,
   setIdosoSelecionado,
 }) {
   const [mensagem, setMensagem] = useState("");
+  const [mensagens, setMensagens] = useState([]);
+  const [carregando, setCarregando] = useState(false);
 
   const perguntasSugeridas = [
     "Quais medicamentos esse idoso utiliza?",
@@ -21,29 +23,111 @@ function Assistente({
     );
 
     setIdosoSelecionado(idoso || null);
+
+    // Limpa a conversa ao trocar o idoso selecionado.
+    setMensagens([]);
   };
 
   const usarPergunta = (pergunta) => {
     setMensagem(pergunta);
   };
 
-  const enviarMensagem = (evento) => {
+  const enviarMensagem = async (evento) => {
     evento.preventDefault();
 
-    if (!mensagem.trim()) {
+    const pergunta = mensagem.trim();
+
+    if (!pergunta || carregando) {
       return;
     }
 
-    alert(
-      "O envio para a inteligência artificial será conectado na próxima etapa."
-    );
+    // Guarda o idoso selecionado no momento do envio.
+    const idosoParaConsulta = idosoSelecionado;
+
+    // Exibe a pergunta imediatamente na conversa.
+    setMensagens((anteriores) => [
+      ...anteriores,
+      {
+        autor: "usuario",
+        texto: pergunta,
+      },
+    ]);
+
+    setMensagem("");
+    setCarregando(true);
+
+    try {
+      const corpoRequisicao = {
+        pergunta,
+      };
+
+      // O idoso é opcional para perguntas gerais.
+      if (idosoParaConsulta?.Id) {
+        corpoRequisicao.idosoId = Number(
+          idosoParaConsulta.Id
+        );
+      }
+
+      const respostaHttp = await fetch(
+        "http://localhost:3000/api/assistente",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(corpoRequisicao),
+        }
+      );
+
+      const dados = await respostaHttp.json();
+
+      if (!respostaHttp.ok) {
+        throw new Error(
+          dados.erro ||
+            `Não foi possível obter a resposta (HTTP ${respostaHttp.status}).`
+        );
+      }
+
+      if (
+        typeof dados.resposta !== "string" ||
+        !dados.resposta.trim()
+      ) {
+        throw new Error(
+          "O Assistente não retornou uma resposta válida."
+        );
+      }
+
+      // Exibe a resposta gerada pelo backend e pelo Gemini.
+      setMensagens((anteriores) => [
+        ...anteriores,
+        {
+          autor: "assistente",
+          texto: dados.resposta,
+        },
+      ]);
+    } catch (erro) {
+      console.error(
+        "Erro ao enviar mensagem ao Assistente:",
+        erro
+      );
+
+      setMensagens((anteriores) => [
+        ...anteriores,
+        {
+          autor: "erro",
+          texto:
+            erro.message ||
+            "Não foi possível conectar ao Assistente. Verifique se o backend está funcionando.",
+        },
+      ]);
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
     <div>
-      {/* ============================== */}
       {/* CABEÇALHO */}
-      {/* ============================== */}
 
       <header className="mb-8">
         <p className="text-sm font-medium text-slate-500">
@@ -55,14 +139,13 @@ function Assistente({
         </h2>
 
         <p className="mt-2 max-w-2xl text-slate-500">
-          Faça perguntas em linguagem natural sobre a rotina
-          dos idosos cadastrados.
+          Faça perguntas em linguagem natural sobre a
+          rotina dos idosos cadastrados ou tire dúvidas
+          gerais e educativas sobre saúde.
         </p>
       </header>
 
-      {/* ============================== */}
       {/* SELEÇÃO DO IDOSO */}
-      {/* ============================== */}
 
       <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6">
         <div className="mb-4">
@@ -71,14 +154,16 @@ function Assistente({
           </h3>
 
           <p className="mt-1 text-sm text-slate-500">
-            O assistente utilizará os dados desse idoso como
-            contexto para responder.
+            Selecione um idoso para consultar os dados
+            cadastrados. Para perguntas gerais, a seleção
+            não é obrigatória.
           </p>
         </div>
 
         {idosos.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">
-            Nenhum idoso cadastrado.
+            Nenhum idoso cadastrado. Você ainda pode fazer
+            perguntas gerais ao Assistente.
           </div>
         ) : (
           <select
@@ -87,14 +172,11 @@ function Assistente({
             className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-900"
           >
             <option value="">
-              Selecione um idoso
+              Nenhum idoso selecionado — pergunta geral
             </option>
 
             {idosos.map((idoso) => (
-              <option
-                key={idoso.Id}
-                value={idoso.Id}
-              >
+              <option key={idoso.Id} value={idoso.Id}>
                 {idoso.Nome}
               </option>
             ))}
@@ -102,9 +184,7 @@ function Assistente({
         )}
       </section>
 
-      {/* ============================== */}
       {/* ÁREA DO ASSISTENTE */}
-      {/* ============================== */}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6">
         <div className="mb-6 flex items-start gap-4">
@@ -120,69 +200,92 @@ function Assistente({
             <p className="mt-1 text-sm text-slate-500">
               {idosoSelecionado
                 ? `Você está consultando informações sobre ${idosoSelecionado.Nome}.`
-                : "Selecione um idoso para começar."}
+                : "Você pode fazer perguntas gerais ou selecionar um idoso para consultar os dados cadastrados."}
             </p>
           </div>
         </div>
 
-        {/* Área da conversa */}
+        {/* ÁREA DA CONVERSA */}
 
         <div className="min-h-72 rounded-2xl bg-slate-50 p-5">
-          {idosoSelecionado ? (
+          {mensagens.length > 0 ? (
+            <div className="space-y-4">
+              {mensagens.map((item, indice) => (
+                <div
+                  key={`${item.autor}-${indice}`}
+                  className={`flex ${
+                    item.autor === "usuario"
+                      ? "justify-end"
+                      : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[90%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-sm leading-6 ${
+                      item.autor === "usuario"
+                        ? "bg-slate-900 text-white"
+                        : item.autor === "erro"
+                          ? "border border-red-200 bg-red-50 text-red-700"
+                          : "border border-slate-200 bg-white text-slate-700"
+                    }`}
+                  >
+                    {item.autor !== "usuario" && (
+                      <p className="mb-1 text-xs font-semibold">
+                        {item.autor === "erro"
+                          ? "Aviso"
+                          : "Assistente"}
+                      </p>
+                    )}
+
+                    {item.texto}
+                  </div>
+                </div>
+              ))}
+
+              {carregando && (
+                <div className="flex justify-start">
+                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
+                    O Assistente está preparando a resposta...
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
             <div className="mx-auto flex min-h-60 max-w-2xl flex-col justify-center">
               <div className="text-center">
-                <div className="text-4xl">
-                  💬
-                </div>
+                <div className="text-4xl">💬</div>
 
                 <h4 className="mt-4 text-lg font-semibold text-slate-900">
                   Como posso ajudar?
                 </h4>
 
                 <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
-                  Pergunte sobre medicamentos, horários,
-                  lembretes ou ocorrências registrados para{" "}
-                  {idosoSelecionado.Nome}.
+                  {idosoSelecionado
+                    ? `Pergunte sobre medicamentos, horários, lembretes ou ocorrências registrados para ${idosoSelecionado.Nome}.`
+                    : "Digite uma pergunta geral sobre saúde ou selecione um idoso para consultar as informações dele."}
                 </p>
               </div>
 
-              {/* Perguntas sugeridas */}
+              {/* PERGUNTAS SUGERIDAS */}
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                {perguntasSugeridas.map((pergunta) => (
-                  <button
-                    key={pergunta}
-                    type="button"
-                    onClick={() => usarPergunta(pergunta)}
-                    className="rounded-xl border border-slate-200 bg-white p-3 text-left text-sm text-slate-600 transition hover:border-slate-300 hover:bg-slate-100"
-                  >
-                    {pergunta}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="flex min-h-60 items-center justify-center text-center">
-              <div className="max-w-md">
-                <div className="text-4xl">
-                  👤
+              {idosoSelecionado && (
+                <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                  {perguntasSugeridas.map((pergunta) => (
+                    <button
+                      key={pergunta}
+                      type="button"
+                      onClick={() => usarPergunta(pergunta)}
+                      className="rounded-xl border border-slate-200 bg-white p-3 text-left text-sm text-slate-600 transition hover:border-slate-300 hover:bg-slate-100"
+                    >
+                      {pergunta}
+                    </button>
+                  ))}
                 </div>
-
-                <h4 className="mt-4 text-lg font-semibold text-slate-900">
-                  Selecione um idoso
-                </h4>
-
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Escolha um idoso acima para que o assistente
-                  possa trabalhar com as informações da rotina
-                  dele.
-                </p>
-              </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Campo de mensagem */}
+        {/* CAMPO DE MENSAGEM */}
 
         <form
           onSubmit={enviarMensagem}
@@ -197,28 +300,28 @@ function Assistente({
             placeholder={
               idosoSelecionado
                 ? "Digite sua pergunta..."
-                : "Selecione um idoso primeiro"
+                : "Digite uma pergunta geral..."
             }
-            disabled={!idosoSelecionado}
+            disabled={carregando}
             className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-slate-900 disabled:cursor-not-allowed disabled:bg-slate-100"
           />
 
           <button
             type="submit"
-            disabled={!idosoSelecionado || !mensagem.trim()}
+            disabled={!mensagem.trim() || carregando}
             className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Enviar
+            {carregando ? "Enviando..." : "Enviar"}
           </button>
         </form>
 
-        {/* Aviso */}
+        {/* AVISO */}
 
         <p className="mt-4 text-xs leading-5 text-slate-400">
-          O assistente será destinado a consultas informacionais
-          sobre os dados registrados no sistema e não deverá
-          realizar diagnósticos ou substituir orientação
-          profissional.
+          O Assistente oferece informações educativas e
+          consultas aos dados registrados no sistema. Ele
+          não realiza diagnósticos nem substitui a orientação
+          de profissionais de saúde.
         </p>
       </section>
     </div>
