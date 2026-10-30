@@ -247,15 +247,21 @@ function Assistente({
         erro
       );
 
+      // Mostra uma mensagem amigável quando não há conexão
+      // com o backend, em vez de exibir "Failed to fetch".
+      const mensagemErro =
+        erro instanceof TypeError
+          ? "Não foi possível conectar ao servidor. Verifique se o backend está funcionando e tente novamente."
+          : erro.message ||
+            "Ocorreu um erro ao consultar o Assistente. Tente novamente.";
+
       atualizarConversa(
         chaveDaRequisicao,
         (anteriores) => [
           ...anteriores,
           {
             autor: "erro",
-            texto:
-              erro.message ||
-              "Não foi possível conectar ao Assistente. Verifique se o backend está funcionando.",
+            texto: mensagemErro,
           },
         ]
       );
