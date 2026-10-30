@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import {
@@ -39,30 +40,79 @@ export function useIdosos(cuidadorAtual) {
     estadoInicialIdosoEditando
   );
 
+  // Identificador do cuidador atual.
+  const cuidadorId = cuidadorAtual?.Id;
+
   // ==============================
   // BUSCAR IDOSOS
   // ==============================
 
   useEffect(() => {
-    if (!cuidadorAtual) {
-      setIdosos([]);
-      setIdosoSelecionado(null);
+    // Sem cuidador, não fazemos requisição.
+    // A lista exibida será vazia por derivação abaixo.
+    if (!cuidadorId) {
       return;
     }
 
+    let requisicaoAtiva = true;
+
     listarIdosos()
       .then((dados) => {
+        if (!requisicaoAtiva) {
+          return;
+        }
+
+        // Mantém somente os idosos do cuidador atual.
         const idososDoCuidador = dados.filter(
           (idoso) =>
-            idoso.Cuidador_Id === cuidadorAtual.Id
+            Number(idoso.Cuidador_Id) === Number(cuidadorId)
         );
 
         setIdosos(idososDoCuidador);
+
+        // Mantém somente uma seleção pertencente ao cuidador atual.
+        setIdosoSelecionado((selecionadoAtual) => {
+          if (!selecionadoAtual) {
+            return null;
+          }
+
+          return (
+            idososDoCuidador.find(
+              (idoso) =>
+                Number(idoso.Id) === Number(selecionadoAtual.Id)
+            ) || null
+          );
+        });
       })
       .catch((erro) => {
-        console.error("Erro ao buscar idosos:", erro);
+        if (requisicaoAtiva) {
+          console.error("Erro ao buscar idosos:", erro);
+        }
       });
-  }, [cuidadorAtual]);
+
+    // Impede que uma requisição antiga altere os dados
+    // caso o cuidador seja trocado antes de ela terminar.
+    return () => {
+      requisicaoAtiva = false;
+    };
+  }, [cuidadorId]);
+
+  // Exibe apenas os idosos pertencentes ao cuidador atual.
+  // Quando não há cuidador, a lista exibida fica vazia.
+  const idososDoCuidadorAtual = cuidadorId
+    ? idosos.filter(
+        (idoso) =>
+          Number(idoso.Cuidador_Id) === Number(cuidadorId)
+      )
+    : [];
+
+  // Impede que um idoso de outro cuidador permaneça selecionado.
+  const idosoSelecionadoAtual = cuidadorId
+    ? idososDoCuidadorAtual.find(
+        (idoso) =>
+          Number(idoso.Id) === Number(idosoSelecionado?.Id)
+      ) || null
+    : null;
 
   // ==============================
   // CADASTRAR IDOSO
@@ -90,7 +140,7 @@ export function useIdosos(cuidadorAtual) {
         dados,
       ]);
 
-      setNovoIdoso(estadoInicialNovoIdoso);
+      setNovoIdoso({ ...estadoInicialNovoIdoso });
       setMostrarFormularioIdoso(false);
     } catch (erro) {
       console.error("Erro ao cadastrar idoso:", erro);
@@ -195,8 +245,8 @@ export function useIdosos(cuidadorAtual) {
   };
 
   return {
-    idosos,
-    idosoSelecionado,
+    idosos: idososDoCuidadorAtual,
+    idosoSelecionado: idosoSelecionadoAtual,
     setIdosoSelecionado,
     mostrarFormularioIdoso,
     setMostrarFormularioIdoso,
