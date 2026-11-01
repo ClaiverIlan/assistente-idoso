@@ -1,6 +1,26 @@
-node_modules/
-.env
-dist/
 
-assistente-idoso.db
+# Dependências
+node_modules/
+
+# Variáveis de ambiente e chaves privadas
+.env
+.env.*
+!.env.example
+
+# Arquivos gerados pelo frontend
+dist/
+build/
+
+# Bancos de dados locais
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Backups
+*-backup*
+
+# Arquivos do DB Browser
 *.sqbpro

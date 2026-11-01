@@ -1,3 +1,4 @@
+
 import IdosoCard from "../components/IdosoCard";
 import IdosoForm from "../components/IdosoForm";
 import RotinaIdoso from "../components/RotinaIdoso";
@@ -21,6 +22,18 @@ function Idosos({
   medicamentos,
   lembretes,
   ocorrencias,
+  onMarcarLembreteRealizado,
+  onMarcarLembreteVisualizado,
+  onMarcarLembreteAdministrado,
+
+  // Histórico de lembretes
+  historicoLembretes,
+  carregandoHistorico,
+  erroHistorico,
+  onCarregarHistorico,
+  onLimparHistorico,
+
+  // Medicamentos
   mostrarFormularioMedicamento,
   mostrarFormularioEdicaoMedicamento,
   novoMedicamento,
@@ -33,6 +46,8 @@ function Idosos({
   editarMedicamento,
   excluirMedicamento,
   prepararEdicaoMedicamento,
+
+  // Ocorrências
   mostrarFormularioOcorrencia,
   mostrarFormularioEdicaoOcorrencia,
   novaOcorrencia,
@@ -67,9 +82,7 @@ function Idosos({
       {/* Lista de idosos */}
 
       <section className="mb-8">
-
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-
           <div>
             <h3 className="text-xl font-semibold text-slate-900">
               Idosos cadastrados
@@ -89,7 +102,6 @@ function Idosos({
           >
             + Adicionar idoso
           </button>
-
         </div>
 
         {/* Formulário de cadastro */}
@@ -126,12 +138,11 @@ function Idosos({
           />
         )}
 
-        {/* Cards */}
+        {/* Cards dos idosos */}
 
         {idosos.length === 0 ? (
           <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
             <div className="mx-auto max-w-md">
-
               <div className="text-4xl">
                 👥
               </div>
@@ -143,12 +154,10 @@ function Idosos({
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 Cadastre um idoso para começar a acompanhar sua rotina.
               </p>
-
             </div>
           </section>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
             {idosos.map((idoso) => (
               <IdosoCard
                 key={idoso.Id}
@@ -161,13 +170,11 @@ function Idosos({
                 onExcluir={excluirIdoso}
               />
             ))}
-
           </div>
         )}
-
       </section>
 
-      {/* Rotina do idoso */}
+      {/* Rotina do idoso selecionado */}
 
       {idosoSelecionado ? (
         <RotinaIdoso
@@ -176,88 +183,69 @@ function Idosos({
           lembretes={lembretes}
           ocorrencias={ocorrencias}
 
+          onMarcarLembreteRealizado={
+            onMarcarLembreteRealizado
+          }
+
+          onMarcarLembreteVisualizado={
+            onMarcarLembreteVisualizado
+          }
+
+          onMarcarLembreteAdministrado={
+            onMarcarLembreteAdministrado
+          }
+
+          // Histórico
+          historicoLembretes={historicoLembretes}
+          carregandoHistorico={carregandoHistorico}
+          erroHistorico={erroHistorico}
+          onCarregarHistorico={onCarregarHistorico}
+          onLimparHistorico={onLimparHistorico}
+
+          // Medicamentos
           mostrarFormularioMedicamento={
             mostrarFormularioMedicamento
           }
-
           mostrarFormularioEdicaoMedicamento={
             mostrarFormularioEdicaoMedicamento
           }
-
           novoMedicamento={novoMedicamento}
-
           medicamentoEditando={medicamentoEditando}
-
           setMostrarFormularioMedicamento={
             setMostrarFormularioMedicamento
           }
-
           setMostrarFormularioEdicaoMedicamento={
             setMostrarFormularioEdicaoMedicamento
           }
-
           setNovoMedicamento={setNovoMedicamento}
-
           setMedicamentoEditando={setMedicamentoEditando}
-
-          onCadastrarMedicamento={
-            cadastrarMedicamento
-          }
-
-          onEditarMedicamento={
-            editarMedicamento
-          }
-
-          onExcluirMedicamento={
-            excluirMedicamento
-          }
-
+          onCadastrarMedicamento={cadastrarMedicamento}
+          onEditarMedicamento={editarMedicamento}
+          onExcluirMedicamento={excluirMedicamento}
           onPrepararEdicaoMedicamento={
             prepararEdicaoMedicamento
           }
 
-          /* Ocorrências */
-
+          // Ocorrências
           mostrarFormularioOcorrencia={
             mostrarFormularioOcorrencia
           }
-
           mostrarFormularioEdicaoOcorrencia={
             mostrarFormularioEdicaoOcorrencia
           }
-
           novaOcorrencia={novaOcorrencia}
-
           ocorrenciaEditando={ocorrenciaEditando}
-
           setMostrarFormularioOcorrencia={
             setMostrarFormularioOcorrencia
           }
-
           setMostrarFormularioEdicaoOcorrencia={
             setMostrarFormularioEdicaoOcorrencia
           }
-
-          setNovaOcorrencia={
-            setNovaOcorrencia
-          }
-
-          setOcorrenciaEditando={
-            setOcorrenciaEditando
-          }
-
-          onCadastrarOcorrencia={
-            cadastrarOcorrencia
-          }
-
-          onEditarOcorrencia={
-            editarOcorrencia
-          }
-
-          onExcluirOcorrencia={
-            excluirOcorrencia
-          }
-
+          setNovaOcorrencia={setNovaOcorrencia}
+          setOcorrenciaEditando={setOcorrenciaEditando}
+          onCadastrarOcorrencia={cadastrarOcorrencia}
+          onEditarOcorrencia={editarOcorrencia}
+          onExcluirOcorrencia={excluirOcorrencia}
           onPrepararEdicaoOcorrencia={
             prepararEdicaoOcorrencia
           }
@@ -265,7 +253,6 @@ function Idosos({
       ) : (
         <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
           <div className="mx-auto max-w-md">
-
             <div className="text-4xl">
               👋
             </div>
@@ -278,7 +265,6 @@ function Idosos({
               Escolha um dos idosos acima para visualizar
               medicamentos, lembretes e ocorrências.
             </p>
-
           </div>
         </section>
       )}

@@ -1,24 +1,19 @@
+
 import { Navigate, useLocation } from "react-router-dom";
 
 import Sidebar from "./components/Sidebar";
-
 import Login from "./components/Login";
 
 import Dashboard from "./pages/Dashboard";
-
 import Idosos from "./pages/Idosos";
-
 import Assistente from "./pages/Assistente";
 
 import { useAutenticacao } from "./hooks/useAutenticacao";
-
 import { useIdosos } from "./hooks/useIdosos";
-
 import { useMedicamentos } from "./hooks/useMedicamentos";
-
 import { useOcorrencias } from "./hooks/useOcorrencias";
-
 import { useLembretes } from "./hooks/useLembretes";
+import { useHistoricoLembretes } from "./hooks/useHistoricoLembretes";
 
 function App() {
   const {
@@ -50,7 +45,22 @@ function App() {
   const {
     lembretes,
     setLembretes,
+    marcarLembreteRealizado,
+    marcarLembreteVisualizado,
+    marcarLembreteAdministrado,
   } = useLembretes();
+
+  // ==============================
+  // HISTÓRICO DE LEMBRETES
+  // ==============================
+
+  const {
+    historico,
+    carregandoHistorico,
+    erroHistorico,
+    carregarHistorico,
+    limparHistorico,
+  } = useHistoricoLembretes();
 
   const {
     medicamentos,
@@ -92,6 +102,7 @@ function App() {
   // ==============================
   // SAIR DA CONTA
   // ==============================
+
   const handleSair = () => {
     const saiu = sair();
 
@@ -106,11 +117,13 @@ function App() {
     setMostrarFormularioEdicaoMedicamento(false);
     setMostrarFormularioOcorrencia(false);
     setMostrarFormularioEdicaoOcorrencia(false);
+    limparHistorico();
   };
 
   // ==============================
   // CUIDADOR ATUAL
   // ==============================
+
   const cuidador = cuidadorAtual;
 
   if (!acessoLiberado) {
@@ -157,6 +170,21 @@ function App() {
               medicamentos={medicamentos}
               lembretes={lembretes}
               ocorrencias={ocorrencias}
+              onMarcarLembreteRealizado={marcarLembreteRealizado}
+              onMarcarLembreteVisualizado={
+                marcarLembreteVisualizado
+              }
+              onMarcarLembreteAdministrado={
+                marcarLembreteAdministrado
+              }
+
+              // Histórico de lembretes
+              historicoLembretes={historico}
+              carregandoHistorico={carregandoHistorico}
+              erroHistorico={erroHistorico}
+              onCarregarHistorico={carregarHistorico}
+              onLimparHistorico={limparHistorico}
+
               mostrarFormularioMedicamento={
                 mostrarFormularioMedicamento
               }

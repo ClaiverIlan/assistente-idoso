@@ -1,3 +1,4 @@
+
 const API_URL = "http://localhost:3000/api";
 
 // ==============================
@@ -239,4 +240,106 @@ export async function listarLembretes() {
   }
 
   return resposta.json();
+}
+
+export async function editarLembrete(id, lembrete) {
+  const resposta = await fetch(`${API_URL}/lembretes/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(lembrete),
+  });
+
+  const dados = await resposta.json();
+
+  if (!resposta.ok) {
+    throw new Error(
+      dados.erro || "Erro ao atualizar lembrete."
+    );
+  }
+
+  return dados;
+}
+
+// ==============================
+// VISUALIZAÇÃO DOS LEMBRETES
+// Mantida temporariamente para compatibilidade.
+// ==============================
+
+export async function atualizarVisualizacaoLembrete(
+  id,
+  visualizado
+) {
+  const resposta = await fetch(
+    `${API_URL}/lembretes/${id}/visualizacao`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ visualizado }),
+    }
+  );
+
+  const dados = await resposta.json();
+
+  if (!resposta.ok) {
+    throw new Error(
+      dados.erro || "Erro ao atualizar visualização."
+    );
+  }
+
+  return dados.lembrete;
+}
+
+// ==============================
+// ADMINISTRAÇÃO DOS MEDICAMENTOS
+// ==============================
+
+export async function atualizarAdministracaoLembrete(
+  id,
+  administrado
+) {
+  const resposta = await fetch(
+    `${API_URL}/lembretes/${id}/administracao`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ administrado }),
+    }
+  );
+
+  const dados = await resposta.json();
+
+  if (!resposta.ok) {
+    throw new Error(
+      dados.erro || "Erro ao atualizar administração."
+    );
+  }
+
+  return dados.lembrete;
+}
+
+// ==============================
+// HISTÓRICO DE LEMBRETES
+// ÚLTIMOS 90 DIAS
+// ==============================
+
+export async function listarHistoricoLembretes(idosoId) {
+  const resposta = await fetch(
+    `${API_URL}/idosos/${idosoId}/lembretes/historico`
+  );
+
+  const dados = await resposta.json();
+
+  if (!resposta.ok) {
+    throw new Error(
+      dados.erro || "Erro ao buscar histórico de lembretes."
+    );
+  }
+
+  return dados;
 }
