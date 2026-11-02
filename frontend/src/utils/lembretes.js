@@ -82,7 +82,8 @@ export function obterSituacaoLembrete(lembrete) {
     lembrete.Data_Hora
   ).substring(11, 16);
 
-  if (horarioProgramado > horarioAtual.hora) {
+  // Aguarda até o próximo minuto após o horário programado.
+  if (horarioProgramado >= horarioAtual.hora) {
     return "Aguardando horário";
   }
 
