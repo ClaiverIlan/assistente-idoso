@@ -1,4 +1,53 @@
 
+const FUSO_HORARIO = "America/Fortaleza";
+
+// Interpreta a data e a hora registradas pelo backend.
+function interpretarDataHora(valor) {
+  const texto = String(valor || "").trim();
+
+  const partes = texto.match(
+    /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/
+  );
+
+  if (!partes) {
+    return null;
+  }
+
+  const [, ano, mes, dia, hora, minuto] = partes;
+
+  return {
+    dia: `${ano}-${mes}-${dia}`,
+    instante: `${ano}-${mes}-${dia}T${hora}:${minuto}`,
+    exibicao: `${dia}/${mes}/${ano} às ${hora}:${minuto}`,
+  };
+}
+
+// Obtém a data e a hora atuais no fuso de Fortaleza.
+function obterAgoraFortaleza() {
+  const formatador = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: FUSO_HORARIO,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+
+  const partes = formatador.formatToParts(new Date());
+
+  const valores = Object.fromEntries(
+    partes.map((parte) => [parte.type, parte.value])
+  );
+
+  const { year, month, day, hour, minute } = valores;
+
+  return {
+    dia: `${year}-${month}-${day}`,
+    instante: `${year}-${month}-${day}T${hour}:${minute}`,
+  };
+}
+
 function Dashboard({
   cuidador,
   idosos,
@@ -25,38 +74,56 @@ function Dashboard({
       idsDosMedicamentos.has(lembrete.Medicamento_Id)
   );
 
-  const lembretesPendentes = lembretesDoCuidador.filter(
-    (lembrete) => lembrete.Status === "Pendente"
-  );
+  const agora = obterAgoraFortaleza();
 
-  const ordenarPorData = (itens) => {
-    return [...itens].sort((a, b) => {
-      const dataA = new Date(
-        String(a.Data_Hora || "").replace(" ", "T")
+  // Separa os lembretes que ainda pertencem
+  // à agenda de hoje ou dos próximos dias.
+  const lembretesEmAberto = lembretesDoCuidador
+    .map((lembrete) => {
+      const data = interpretarDataHora(
+        lembrete.Data_Hora
       );
 
-      const dataB = new Date(
-        String(b.Data_Hora || "").replace(" ", "T")
-      );
-
-      if (
-        Number.isNaN(dataA.getTime()) ||
-        Number.isNaN(dataB.getTime())
-      ) {
-        return 0;
+      return {
+        ...lembrete,
+        dataFormatada: data,
+      };
+    })
+    .filter((lembrete) => {
+      if (!lembrete.dataFormatada) {
+        return false;
       }
 
-      return dataA - dataB;
-    });
-  };
+      const administrado =
+        lembrete.Status === "Administrado";
 
-  const proximosLembretes = ordenarPorData(
-    lembretesPendentes
-  ).slice(0, 5);
+      const diaValido =
+        lembrete.dataFormatada.dia >= agora.dia;
+
+      return !administrado && diaValido;
+    });
+
+  // Considera pendente o horário de hoje
+  // que já passou e ainda não foi confirmado.
+  const lembretesPendentes = lembretesEmAberto.filter(
+    (lembrete) =>
+      lembrete.dataFormatada.dia === agora.dia &&
+      lembrete.dataFormatada.instante < agora.instante
+  );
+
+  // Mostra os próximos cinco horários em aberto.
+  const proximosLembretes = [...lembretesEmAberto]
+    .sort((a, b) =>
+      a.dataFormatada.instante.localeCompare(
+        b.dataFormatada.instante
+      )
+    )
+    .slice(0, 5);
 
   const encontrarMedicamento = (medicamentoId) => {
     return medicamentosDoCuidador.find(
-      (medicamento) => medicamento.Id === medicamentoId
+      (medicamento) =>
+        medicamento.Id === medicamentoId
     );
   };
 
@@ -87,7 +154,7 @@ function Dashboard({
 
       {/* RESUMO */}
       <section className="mb-8 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* CARTÃO DE IDOSOS */}
+        {/* QUANTIDADE DE IDOSOS */}
         <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5">
           <p className="text-sm font-medium text-slate-500">
             Idosos
@@ -102,7 +169,7 @@ function Dashboard({
           </p>
         </div>
 
-        {/* CARTÃO DE LEMBRETES */}
+        {/* LEMBRETES PENDENTES DE HOJE */}
         <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5">
           <p className="text-sm font-medium text-slate-500">
             Lembretes
@@ -113,7 +180,7 @@ function Dashboard({
           </p>
 
           <p className="mt-1 text-sm text-slate-500">
-            pendentes
+            pendentes hoje
           </p>
         </div>
       </section>
@@ -126,14 +193,15 @@ function Dashboard({
           </h3>
 
           <p className="mt-1 break-words text-sm text-slate-500">
-            Medicamentos com lembretes pendentes.
+            Horários de hoje e dos próximos dias.
           </p>
         </div>
 
         {proximosLembretes.length === 0 ? (
           <div className="min-w-0 rounded-xl bg-slate-50 p-4 text-center sm:p-6">
             <p className="break-words text-sm text-slate-500">
-              Não há lembretes pendentes no momento.
+              Não há lembretes em aberto para hoje
+              ou para os próximos dias.
             </p>
           </div>
         ) : (
@@ -147,11 +215,17 @@ function Dashboard({
                 ? encontrarIdoso(medicamento.Idoso_Id)
                 : null;
 
+              const pendente =
+                lembrete.dataFormatada.dia === agora.dia &&
+                lembrete.dataFormatada.instante <
+                  agora.instante;
+
               return (
                 <div
                   key={lembrete.Id}
                   className="flex min-w-0 flex-col gap-2 rounded-xl border border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between"
                 >
+                  {/* MEDICAMENTO E IDOSO */}
                   <div className="min-w-0">
                     <p className="break-words font-semibold text-slate-900">
                       {medicamento?.Nome || "Medicamento"}
@@ -162,13 +236,22 @@ function Dashboard({
                     </p>
                   </div>
 
+                  {/* DATA E SITUAÇÃO */}
                   <div className="min-w-0 text-left lg:text-right">
                     <p className="break-words font-semibold text-slate-900">
-                      {lembrete.Data_Hora}
+                      {lembrete.dataFormatada.exibicao}
                     </p>
 
-                    <p className="break-words text-sm text-amber-600">
-                      {lembrete.Status}
+                    <p
+                      className={`mt-1 text-sm font-medium ${
+                        pendente
+                          ? "text-amber-600"
+                          : "text-blue-600"
+                      }`}
+                    >
+                      {pendente
+                        ? "Pendente"
+                        : "Aguardando horário"}
                     </p>
                   </div>
                 </div>
