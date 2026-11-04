@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const CHAVE_ARMAZENAMENTO = "assistente-idoso:conversas:v1";
 
@@ -27,8 +27,7 @@ function carregarConversas() {
   }
 }
 
-// Formata o texto do assistente sem exibir os asteriscos
-// usados para representar negrito e marcadores de lista.
+// Formata textos do assistente, incluindo trechos em negrito.
 function renderizarTexto(texto) {
   if (typeof texto !== "string") {
     return texto;
@@ -37,10 +36,7 @@ function renderizarTexto(texto) {
   const linhas = texto.split("\n");
 
   return linhas.map((linha, indiceLinha) => {
-    // Remove o asterisco usado como marcador de lista.
     const linhaLimpa = linha.replace(/^\s*\*\s+/, "");
-
-    // Separa os trechos que estão entre **.
     const partes = linhaLimpa.split(/(\*\*.*?\*\*)/g);
 
     return (
@@ -73,11 +69,16 @@ function Assistente({
   setIdosoSelecionado,
 }) {
   const [mensagem, setMensagem] = useState("");
-
   const [conversas, setConversas] = useState(carregarConversas);
 
   const [carregandoPorConversa, setCarregandoPorConversa] =
     useState({});
+
+  const [listaIdososAberta, setListaIdososAberta] = useState(false);
+
+  const seletorRef = useRef(null);
+  const botaoSeletorRef = useRef(null);
+  const campoMensagemRef = useRef(null);
 
   const chaveConversa = idosoSelecionado?.Id
     ? `idoso:${idosoSelecionado.Id}`
@@ -110,7 +111,57 @@ function Assistente({
     }
   }, [conversas]);
 
-  // Atualiza apenas a conversa indicada, preservando as demais.
+  // Ajusta automaticamente a altura do campo de mensagem.
+  useEffect(() => {
+    const campo = campoMensagemRef.current;
+
+    if (!campo) {
+      return;
+    }
+
+    campo.style.height = "auto";
+
+    const alturaMaxima = 224;
+    const alturaNecessaria = campo.scrollHeight;
+
+    campo.style.height = `${Math.min(
+      alturaNecessaria,
+      alturaMaxima
+    )}px`;
+  }, [mensagem]);
+
+  // Fecha a lista de idosos ao clicar fora ou pressionar Escape.
+  useEffect(() => {
+    if (!listaIdososAberta) {
+      return;
+    }
+
+    const aoClicarFora = (evento) => {
+      if (
+        seletorRef.current &&
+        !seletorRef.current.contains(evento.target)
+      ) {
+        setListaIdososAberta(false);
+      }
+    };
+
+    const aoPressionarTecla = (evento) => {
+      if (evento.key === "Escape") {
+        setListaIdososAberta(false);
+        botaoSeletorRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("pointerdown", aoClicarFora);
+    document.addEventListener("keydown", aoPressionarTecla);
+
+    return () => {
+      document.removeEventListener("pointerdown", aoClicarFora);
+      document.removeEventListener("keydown", aoPressionarTecla);
+    };
+  }, [listaIdososAberta]);
+
+  // Atualiza apenas a conversa indicada.
   const atualizarConversa = (chave, atualizador) => {
     setConversas((anteriores) => {
       const mensagensAnteriores = Array.isArray(anteriores[chave])
@@ -129,20 +180,36 @@ function Assistente({
     });
   };
 
-  const selecionarIdoso = (evento) => {
-    const idSelecionado = Number(evento.target.value);
-
+  // Seleciona um idoso sem apagar o histórico das conversas.
+  const selecionarIdoso = (idSelecionado) => {
     const idoso = idosos.find(
-      (item) => item.Id === idSelecionado
+      (item) => String(item.Id) === String(idSelecionado)
     );
 
     setIdosoSelecionado(idoso || null);
+    setListaIdososAberta(false);
 
-    // As mensagens são preservadas quando outro idoso é selecionado.
+    botaoSeletorRef.current?.focus();
   };
 
   const usarPergunta = (pergunta) => {
     setMensagem(pergunta);
+    campoMensagemRef.current?.focus();
+  };
+
+  // Enter envia a pergunta; Shift + Enter cria uma nova linha.
+  const aoPressionarTeclaMensagem = (evento) => {
+    if (
+      evento.key === "Enter" &&
+      !evento.shiftKey &&
+      !evento.nativeEvent.isComposing
+    ) {
+      evento.preventDefault();
+
+      if (mensagem.trim() && !carregando) {
+        evento.currentTarget.form?.requestSubmit();
+      }
+    }
   };
 
   const enviarMensagem = async (evento) => {
@@ -154,11 +221,10 @@ function Assistente({
       return;
     }
 
-    // Mantém a conversa e o idoso corretos durante a requisição.
+    // Preserva o idoso e a conversa corretos durante a requisição.
     const chaveDaRequisicao = chaveConversa;
     const idosoDaRequisicao = idosoSelecionado;
 
-    // Envia as últimas mensagens válidas para manter o contexto.
     const historico = mensagens
       .filter(
         (item) =>
@@ -171,7 +237,6 @@ function Assistente({
         texto,
       }));
 
-    // Salva a pergunta na conversa correspondente.
     atualizarConversa(
       chaveDaRequisicao,
       (anteriores) => [
@@ -247,8 +312,6 @@ function Assistente({
         erro
       );
 
-      // Mostra uma mensagem amigável quando não há conexão
-      // com o backend, em vez de exibir "Failed to fetch".
       const mensagemErro =
         erro instanceof TypeError
           ? "Não foi possível conectar ao servidor. Verifique se o backend está funcionando e tente novamente."
@@ -274,7 +337,7 @@ function Assistente({
   };
 
   return (
-    <div>
+    <div className="min-w-0">
       {/* CABEÇALHO */}
       <header className="mb-8">
         <p className="text-sm font-medium text-slate-500">
@@ -293,7 +356,7 @@ function Assistente({
       </header>
 
       {/* SELEÇÃO DO IDOSO */}
-      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6">
+      <section className="mb-6 min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-slate-900">
             Sobre qual idoso você quer perguntar?
@@ -311,32 +374,104 @@ function Assistente({
             perguntas gerais ao Assistente.
           </div>
         ) : (
-          <select
-            value={idosoSelecionado?.Id || ""}
-            onChange={selecionarIdoso}
-            className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-slate-900"
+          <div
+            ref={seletorRef}
+            className="relative w-full min-w-0"
           >
-            <option value="">
-              Nenhum idoso selecionado — pergunta geral
-            </option>
+            {/* BOTÃO DO SELETOR */}
+            <button
+              ref={botaoSeletorRef}
+              type="button"
+              onClick={() =>
+                setListaIdososAberta((aberta) => !aberta)
+              }
+              aria-label="Selecionar idoso para consulta"
+              aria-expanded={listaIdososAberta}
+              aria-controls="lista-idosos-assistente"
+              className="flex w-full min-w-0 items-center justify-between gap-3 rounded-xl border border-slate-300 bg-white px-4 py-3 text-left text-sm text-slate-700 transition hover:border-slate-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500"
+            >
+              <span className="min-w-0 flex-1 truncate">
+                {idosoSelecionado?.Nome ||
+                  "Pergunta geral (sem idoso)"}
+              </span>
 
-            {idosos.map((idoso) => (
-              <option key={idoso.Id} value={idoso.Id}>
-                {idoso.Nome}
-              </option>
-            ))}
-          </select>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className={`shrink-0 text-slate-500 transition-transform ${
+                  listaIdososAberta ? "rotate-180" : ""
+                }`}
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+
+            {/* LISTA DE IDOSOS PERSONALIZADA */}
+            {listaIdososAberta && (
+              <div
+                id="lista-idosos-assistente"
+                role="group"
+                aria-label="Opções de seleção de idoso"
+                className="absolute left-0 right-0 top-full z-30 mt-2 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-md"
+              >
+                <button
+                  type="button"
+                  onClick={() => selecionarIdoso("")}
+                  aria-pressed={!idosoSelecionado}
+                  className={`block w-full rounded-lg px-3 py-3 text-left text-sm transition ${
+                    !idosoSelecionado
+                      ? "bg-slate-900 text-white"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  Pergunta geral (sem idoso)
+                </button>
+
+                {idosos.map((idoso) => {
+                  const selecionado =
+                    String(idosoSelecionado?.Id) ===
+                    String(idoso.Id);
+
+                  return (
+                    <button
+                      key={idoso.Id}
+                      type="button"
+                      onClick={() =>
+                        selecionarIdoso(idoso.Id)
+                      }
+                      aria-pressed={selecionado}
+                      className={`block w-full break-words rounded-lg px-3 py-3 text-left text-sm transition ${
+                        selecionado
+                          ? "bg-slate-900 text-white"
+                          : "text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      {idoso.Nome}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
       </section>
 
       {/* ÁREA DO ASSISTENTE */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <div className="mb-6 flex items-start gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-2xl">
+      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+        <div className="mb-6 flex min-w-0 items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-2xl">
             ✨
           </div>
 
-          <div>
+          <div className="min-w-0">
             <h3 className="text-lg font-semibold text-slate-900">
               Assistente inteligente
             </h3>
@@ -350,20 +485,20 @@ function Assistente({
         </div>
 
         {/* ÁREA DA CONVERSA */}
-        <div className="min-h-72 rounded-2xl bg-slate-50 p-5">
+        <div className="min-h-72 min-w-0 rounded-2xl bg-slate-50 p-4 sm:p-5">
           {mensagens.length > 0 ? (
             <div className="space-y-4">
               {mensagens.map((item, indice) => (
                 <div
                   key={`${item.autor}-${indice}`}
-                  className={`flex ${
+                  className={`flex min-w-0 ${
                     item.autor === "usuario"
                       ? "justify-end"
                       : "justify-start"
                   }`}
                 >
                   <div
-                    className={`max-w-[90%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-sm leading-6 ${
+                    className={`min-w-0 max-w-[90%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-sm leading-6 ${
                       item.autor === "usuario"
                         ? "bg-slate-900 text-white"
                         : item.autor === "erro"
@@ -428,22 +563,27 @@ function Assistente({
           )}
         </div>
 
-        {/* CAMPO DE MENSAGEM */}
+        {/* CAMPO DE MENSAGEM MULTILINHA */}
         <form
           onSubmit={enviarMensagem}
-          className="mt-5 flex flex-col gap-3 sm:flex-row"
+          className="mt-5 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end"
         >
-          <input
-            type="text"
+          <textarea
+            ref={campoMensagemRef}
+            rows={3}
             value={mensagem}
-            onChange={(evento) => setMensagem(evento.target.value)}
+            onChange={(evento) =>
+              setMensagem(evento.target.value)
+            }
+            onKeyDown={aoPressionarTeclaMensagem}
             placeholder={
               idosoSelecionado
                 ? "Digite sua pergunta..."
                 : "Digite uma pergunta geral..."
             }
+            aria-label="Pergunta para o Assistente"
             disabled={carregando}
-            className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-slate-900 disabled:cursor-not-allowed disabled:bg-slate-100"
+            className="max-h-56 min-h-24 w-full min-w-0 flex-1 resize-none overflow-y-auto rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-slate-900 disabled:cursor-not-allowed disabled:bg-slate-100"
           />
 
           <button
@@ -454,6 +594,10 @@ function Assistente({
             {carregando ? "Enviando..." : "Enviar"}
           </button>
         </form>
+
+        <p className="mt-2 text-xs text-slate-400">
+          Enter para enviar. Shift + Enter para nova linha.
+        </p>
 
         {/* AVISO */}
         <p className="mt-4 text-xs leading-5 text-slate-400">
