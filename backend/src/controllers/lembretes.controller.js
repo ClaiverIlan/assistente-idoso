@@ -1,8 +1,8 @@
+
 const db = require("../config/database");
 
 const {
   obterDataAtualFortaleza,
-  obterDataHoraAtualFortaleza,
   gerarLembretesProximosSeteDias,
 } = require("../services/lembretes.service");
 
@@ -163,6 +163,7 @@ function atualizarAdministracao(req, res) {
       });
     }
 
+    // Registra a data e hora real do evento em UTC.
     const dataHoraEvento = new Date().toISOString();
 
     const acao = administrado
@@ -424,7 +425,7 @@ function listarHistoricoLembretes(req, res) {
       .toISOString()
       .slice(0, 10);
 
-    // Data final: ontem.
+    // Data final dos registros anteriores: ontem.
     const dataFimObjeto = new Date(
       `${dataAtual}T00:00:00.000Z`
     );
@@ -471,7 +472,9 @@ function listarHistoricoLembretes(req, res) {
       dataFim
     );
 
-    // Recupera as ações de confirmação e desfazimento.
+    // Recupera as ações pela data em que realmente aconteceram.
+    // Os eventos são armazenados em UTC e convertidos para Fortaleza.
+    // Inclui hoje para que as confirmações apareçam imediatamente.
     const acoes = db.prepare(`
       SELECT
         "Id",
@@ -485,13 +488,13 @@ function listarHistoricoLembretes(req, res) {
       FROM "LEMBRETE_HISTORICO"
       WHERE
         "Idoso_Id" = ?
-        AND SUBSTR("Data_Hora_Programada", 1, 10) >= ?
-        AND SUBSTR("Data_Hora_Programada", 1, 10) <= ?
+        AND DATE("Data_Hora_Evento", '-3 hours') >= ?
+        AND DATE("Data_Hora_Evento", '-3 hours') <= ?
       ORDER BY "Data_Hora_Evento" DESC
     `).all(
       idosoId,
       dataInicio,
-      dataFim
+      dataAtual
     );
 
     // Preserva registros antigos sem data identificável.
@@ -520,7 +523,7 @@ function listarHistoricoLembretes(req, res) {
       idoso,
       periodo: {
         inicio: dataInicio,
-        fim: dataFim,
+        fim: dataAtual,
       },
       total: lembretes.length,
       lembretes,
