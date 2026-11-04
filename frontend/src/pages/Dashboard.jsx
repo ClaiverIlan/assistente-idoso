@@ -1,3 +1,4 @@
+
 function Dashboard({
   cuidador,
   idosos,
@@ -66,27 +67,28 @@ function Dashboard({
   };
 
   return (
-    <div>
-      {/* Cabeçalho */}
-      <header className="mb-8">
+    <div className="w-full min-w-0 max-w-full">
+      {/* CABEÇALHO */}
+      <header className="mb-8 min-w-0">
         <p className="text-sm font-medium text-slate-500">
           Início
         </p>
 
-        <h2 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
+        <h2 className="mt-1 break-words text-3xl font-bold tracking-tight text-slate-900">
           {cuidador
             ? `Olá, ${cuidador.Nome}`
             : "Bem-vindo"}
         </h2>
 
-        <p className="mt-2 text-slate-500">
+        <p className="mt-2 break-words text-slate-500">
           Acompanhe de forma rápida a rotina dos seus idosos.
         </p>
       </header>
 
-      {/* Resumo */}
-      <section className="mb-8 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      {/* RESUMO */}
+      <section className="mb-8 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* CARTÃO DE IDOSOS */}
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5">
           <p className="text-sm font-medium text-slate-500">
             Idosos
           </p>
@@ -100,7 +102,8 @@ function Dashboard({
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+        {/* CARTÃO DE LEMBRETES */}
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5">
           <p className="text-sm font-medium text-slate-500">
             Lembretes
           </p>
@@ -115,31 +118,30 @@ function Dashboard({
         </div>
       </section>
 
-      {/* Próximos lembretes */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-6">
-        <div className="mb-5">
-          <h3 className="text-xl font-semibold text-slate-900">
+      {/* PRÓXIMOS LEMBRETES */}
+      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+        <div className="mb-5 min-w-0">
+          <h3 className="break-words text-xl font-semibold text-slate-900">
             Próximos lembretes
           </h3>
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 break-words text-sm text-slate-500">
             Medicamentos com lembretes pendentes.
           </p>
         </div>
 
         {proximosLembretes.length === 0 ? (
-          <div className="rounded-xl bg-slate-50 p-6 text-center">
-            <p className="text-sm text-slate-500">
+          <div className="min-w-0 rounded-xl bg-slate-50 p-4 text-center sm:p-6">
+            <p className="break-words text-sm text-slate-500">
               Não há lembretes pendentes no momento.
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="min-w-0 space-y-3">
             {proximosLembretes.map((lembrete) => {
-              const medicamento =
-                encontrarMedicamento(
-                  lembrete.Medicamento_Id
-                );
+              const medicamento = encontrarMedicamento(
+                lembrete.Medicamento_Id
+              );
 
               const idoso = medicamento
                 ? encontrarIdoso(medicamento.Idoso_Id)
@@ -148,26 +150,24 @@ function Dashboard({
               return (
                 <div
                   key={lembrete.Id}
-                  className="flex flex-col gap-2 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex min-w-0 flex-col gap-2 rounded-xl border border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between"
                 >
-                  <div>
-                    <p className="font-semibold text-slate-900">
-                      {medicamento?.Nome ||
-                        "Medicamento"}
+                  <div className="min-w-0">
+                    <p className="break-words font-semibold text-slate-900">
+                      {medicamento?.Nome || "Medicamento"}
                     </p>
 
-                    <p className="text-sm text-slate-500">
-                      {idoso?.Nome ||
-                        "Idoso não encontrado"}
+                    <p className="break-words text-sm text-slate-500">
+                      {idoso?.Nome || "Idoso não encontrado"}
                     </p>
                   </div>
 
-                  <div className="text-left sm:text-right">
-                    <p className="font-semibold text-slate-900">
+                  <div className="min-w-0 text-left lg:text-right">
+                    <p className="break-words font-semibold text-slate-900">
                       {lembrete.Data_Hora}
                     </p>
 
-                    <p className="text-sm text-amber-600">
+                    <p className="break-words text-sm text-amber-600">
                       {lembrete.Status}
                     </p>
                   </div>

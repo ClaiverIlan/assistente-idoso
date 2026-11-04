@@ -21,7 +21,6 @@ function Sidebar({ onSair }) {
     onSair();
   };
 
-  // Permite fechar o menu usando a tecla Escape.
   useEffect(() => {
     if (!menuAberto) return;
 
@@ -40,10 +39,8 @@ function Sidebar({ onSair }) {
 
   return (
     <>
-      {/* =====================================
-          BARRA SUPERIOR PARA CELULARES
-      ===================================== */}
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-slate-50 px-4 md:hidden">
+      {/* BARRA SUPERIOR - CELULARES E TABLETS */}
+      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-slate-50 px-4 lg:hidden">
         <button
           type="button"
           onClick={() => setMenuAberto(true)}
@@ -73,12 +70,9 @@ function Sidebar({ onSair }) {
         </span>
       </header>
 
-      {/* =====================================
-          MENU LATERAL PARA CELULARES
-      ===================================== */}
+      {/* MENU PARA CELULARES E TABLETS */}
       {menuAberto && (
-        <div className="md:hidden">
-          {/* Fundo escurecido */}
+        <div className="lg:hidden">
           <button
             type="button"
             onClick={fecharMenu}
@@ -86,7 +80,6 @@ function Sidebar({ onSair }) {
             aria-label="Fechar menu de navegação"
           />
 
-          {/* Painel de navegação */}
           <aside
             id="menu-mobile"
             aria-label="Menu de navegação"
@@ -164,10 +157,8 @@ function Sidebar({ onSair }) {
         </div>
       )}
 
-      {/* =====================================
-          MENU ORIGINAL PARA COMPUTADORES
-      ===================================== */}
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-6 md:flex">
+      {/* MENU ORIGINAL - COMPUTADORES */}
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-6 lg:flex">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900">
             Sistema de Cuidado

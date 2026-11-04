@@ -268,7 +268,7 @@ function Assistente({
       }
 
       const respostaHttp = await fetch(
-        "http://localhost:3000/api/assistente",
+        `http://${window.location.hostname}:3000/api/assistente`,
         {
           method: "POST",
           headers: {
