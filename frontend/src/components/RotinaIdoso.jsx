@@ -90,13 +90,19 @@ function RotinaIdoso({
 
   // A rotina atual mostra somente hoje e os próximos dias.
   // Registros antigos e registros sem data ficam no histórico.
-  const lembretesDaRotina = lembretesDoIdoso.filter(
-    (lembrete) => {
+  const lembretesDaRotina = lembretesDoIdoso
+    .filter((lembrete) => {
       const data = obterDataLembrete(lembrete.Data_Hora);
 
       return data && data >= hoje;
-    }
-  );
+    })
+    // Exibe primeiro o horário mais próximo, mantendo os registros intactos.
+    .sort((a, b) => {
+      const dataA = String(a.Data_Hora || "").replace(" ", "T");
+      const dataB = String(b.Data_Hora || "").replace(" ", "T");
+
+      return dataA.localeCompare(dataB);
+    });
 
   const ocorrenciasDoIdoso = ocorrencias.filter(
     (ocorrencia) => ocorrencia.Idoso_Id === idoso.Id
